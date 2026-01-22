@@ -2,7 +2,7 @@ package mapping
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 
 	"github.com/expr-lang/expr"
@@ -67,6 +67,8 @@ func (tt *TableType) UnmarshalJSON(data []byte) error {
 		*tt = PolygonTable
 	case `"geometry"`:
 		*tt = GeometryTable
+	case `"point_or_polygon"`:
+		*tt = PointOrPolygonTable
 	case `"relation"`:
 		*tt = RelationTable
 	case `"relation_member"`:
@@ -80,6 +82,7 @@ const (
 	LineStringTable     TableType = "linestring"
 	PointTable          TableType = "point"
 	GeometryTable       TableType = "geometry"
+	PointOrPolygonTable TableType = "point_or_polygon"
 	RelationTable       TableType = "relation"
 	RelationMemberTable TableType = "relation_member"
 )
@@ -103,7 +106,7 @@ func FromFile(filename string) (*Mapping, error) {
 
 func New(b []byte) (*Mapping, error) {
 	mapping := Mapping{}
-	err := yaml.Unmarshal(b, &mapping.Conf)
+	err := yaml.UnmarshalStrict(b, &mapping.Conf)
 	if err != nil {
 		return nil, err
 	}
@@ -175,9 +178,73 @@ func (m *Mapping) createMatcher() error {
 	return nil
 }
 
+type tableElementMultiValues map[string]map[Key]struct{}
+
+func (m *Mapping) multiValues(tableType TableType) tableElementMultiValues {
+	options := make(tableElementMultiValues)
+
+	for name, t := range m.Conf.Tables {
+		if !tableMatchesType(t, tableType) {
+			continue
+		}
+
+		multiValues := make(map[Key]struct{})
+
+		for _, key := range t.MultiValues {
+			multiValues[Key(key)] = struct{}{}
+		}
+
+		options[name] = multiValues
+	}
+	return options
+}
+
+func (m *Mapping) splitValuesForTableKey(t *config.Table, key string) bool {
+	if len(t.MultiValues) == 0 {
+		return false
+	}
+
+	for _, k := range t.MultiValues {
+		if k == "__any__" || string(k) == key {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (m *Mapping) multiValueKeysForFilters(tableTypes ...TableType) (map[Key]bool, bool) {
+	keys := make(map[Key]bool)
+	any := false
+	for _, t := range m.Conf.Tables {
+		match := false
+
+		for _, tableType := range tableTypes {
+			if tableMatchesType(t, tableType) {
+				match = true
+				break
+			}
+		}
+
+		if !match {
+			continue
+		}
+
+		for _, key := range t.MultiValues {
+			if key == "__any__" {
+				any = true
+				continue
+			}
+			keys[Key(key)] = true
+		}
+	}
+
+	return keys, any
+}
+
 func (m *Mapping) mappings(tableType TableType, mappings TagTableMapping) {
 	for name, t := range m.Conf.Tables {
-		if TableType(t.Type) != GeometryTable && TableType(t.Type) != tableType {
+		if !tableMatchesType(t, tableType) {
 			continue
 		}
 		mappings.addFromMapping(t.Mapping, DestTable{Name: name})
@@ -186,14 +253,24 @@ func (m *Mapping) mappings(tableType TableType, mappings TagTableMapping) {
 			mappings.addFromMapping(subMapping.Mapping, DestTable{Name: name, SubMapping: subMappingName})
 		}
 
+		addTypeMapping := func(typeMapping config.TypeMapping) {
+			if typeMapping.Mapping != nil {
+				mappings.addFromMapping(typeMapping.Mapping, DestTable{Name: name})
+			}
+			for subMappingName, subMapping := range typeMapping.Mappings {
+				mappings.addFromMapping(subMapping.Mapping, DestTable{Name: name, SubMapping: subMappingName})
+			}
+		}
+
 		switch tableType {
 		case PointTable:
-			mappings.addFromMapping(t.TypeMappings.Points, DestTable{Name: name})
+			addTypeMapping(t.TypeMappings.Points)
 		case LineStringTable:
-			mappings.addFromMapping(t.TypeMappings.LineStrings, DestTable{Name: name})
+			addTypeMapping(t.TypeMappings.LineStrings)
 		case PolygonTable:
-			mappings.addFromMapping(t.TypeMappings.Polygons, DestTable{Name: name})
+			addTypeMapping(t.TypeMappings.Polygons)
 		}
+		addTypeMapping(t.TypeMappings.Any)
 	}
 }
 
@@ -201,7 +278,7 @@ func (m *Mapping) tables(tableType TableType) (map[string]*rowBuilder, error) {
 	var err error
 	result := make(map[string]*rowBuilder)
 	for name, t := range m.Conf.Tables {
-		if TableType(t.Type) == tableType || TableType(t.Type) == GeometryTable {
+		if tableMatchesType(t, tableType) {
 			result[name], err = makeRowBuilder(t)
 			if err != nil {
 				return nil, errors.Wrapf(err, "creating row builder for %s", name)
@@ -222,6 +299,13 @@ func makeRowBuilder(tbl *config.Table) (*rowBuilder, error) {
 		columnType, err := MakeColumnType(mappingColumn)
 		if err != nil {
 			return nil, errors.Wrapf(err, "creating column %s", mappingColumn.Name)
+		}
+		if mappingColumn.GeometryTransform != "" && (columnType.Name == "geometry" || columnType.Name == "validated_geometry") {
+			normalized, err := normalizeGeometryTransform(mappingColumn.GeometryTransform)
+			if err != nil {
+				return nil, errors.Wrapf(err, "column %s", mappingColumn.Name)
+			}
+			columnType.Func = makeGeometryTransformFunc(normalized)
 		}
 		column.colType = *columnType
 		result.columns = append(result.columns, column)
@@ -248,7 +332,7 @@ func MakeColumnType(c *config.Column) (*ColumnType, error) {
 
 func (m *Mapping) extraTags(tableType TableType, tags map[Key]bool) {
 	for _, t := range m.Conf.Tables {
-		if TableType(t.Type) != tableType && TableType(t.Type) != GeometryTable {
+		if !tableMatchesType(t, tableType) {
 			continue
 		}
 
@@ -302,7 +386,7 @@ func (m *Mapping) addTypedFilters(tableType TableType, filters tableElementFilte
 	}
 
 	for name, t := range m.Conf.Tables {
-		if TableType(t.Type) != GeometryTable && TableType(t.Type) != tableType {
+		if !tableMatchesType(t, tableType) {
 			continue
 		}
 		if TableType(t.Type) == LineStringTable && areaTags != nil {
@@ -338,21 +422,23 @@ func (m *Mapping) addTypedFilters(tableType TableType, filters tableElementFilte
 	}
 }
 
-func (m *Mapping) addRelationFilters(_ TableType, filters tableElementFilters) {
+func (m *Mapping) addRelationFilters(tableType TableType, filters tableElementFilters) {
 	for name, t := range m.Conf.Tables {
 		if t.RelationTypes != nil {
-			relTypes := t.RelationTypes // copy loop var for closure
+			relTypes := t.RelationTypes
 			f := func(tags osm.Tags, key Key, elemType string, closed bool) bool {
 				if v, ok := tags["type"]; ok {
-					if slices.Contains(relTypes, v) {
-						return true
+					for _, rtype := range relTypes {
+						if v == rtype {
+							return true
+						}
 					}
 				}
 				return false
 			}
 			filters[name] = append(filters[name], f)
 		} else {
-			if TableType(t.Type) == PolygonTable {
+			if TableType(t.Type) == PolygonTable || TableType(t.Type) == PointOrPolygonTable {
 				// standard multipolygon handling (boundary and land_area are for backwards compatibility)
 				f := func(tags osm.Tags, key Key, elemType string, closed bool) bool {
 					if v, ok := tags["type"]; ok {
@@ -366,6 +452,17 @@ func (m *Mapping) addRelationFilters(_ TableType, filters tableElementFilters) {
 			}
 		}
 	}
+}
+
+func tableMatchesType(t *config.Table, tableType TableType) bool {
+	ttype := TableType(t.Type)
+	if ttype == GeometryTable || ttype == tableType {
+		return true
+	}
+	if ttype == PointOrPolygonTable && (tableType == PointTable || tableType == PolygonTable) {
+		return true
+	}
+	return false
 }
 
 func (m *Mapping) addFilters(filters tableElementFilters) {
@@ -384,32 +481,32 @@ func (m *Mapping) addFilters(filters tableElementFilters) {
 						Order: 1,
 					},
 				}
-				filters[name] = append(filters[name], makeFiltersFunction(name, false, true, keyname, vararr))
+				filters[name] = append(filters[name], makeFiltersFunction(name, false, true, keyname, vararr, m.splitValuesForTableKey(t, keyname)))
 
 			}
 		}
 
 		if t.Filters.Require != nil {
 			for keyname, vararr := range t.Filters.Require {
-				filters[name] = append(filters[name], makeFiltersFunction(name, true, false, string(keyname), vararr))
+				filters[name] = append(filters[name], makeFiltersFunction(name, true, false, string(keyname), vararr, m.splitValuesForTableKey(t, string(keyname))))
 			}
 		}
 
 		if t.Filters.Reject != nil {
 			for keyname, vararr := range t.Filters.Reject {
-				filters[name] = append(filters[name], makeFiltersFunction(name, false, true, string(keyname), vararr))
+				filters[name] = append(filters[name], makeFiltersFunction(name, false, true, string(keyname), vararr, m.splitValuesForTableKey(t, string(keyname))))
 			}
 		}
 
 		if t.Filters.RequireRegexp != nil {
-			for keyname, regexp := range t.Filters.RequireRegexp {
-				filters[name] = append(filters[name], makeRegexpFiltersFunction(name, true, false, string(keyname), regexp))
+			for keyname, re := range t.Filters.RequireRegexp {
+				filters[name] = append(filters[name], makeRegexpFiltersFunction(name, true, false, string(keyname), re, m.splitValuesForTableKey(t, string(keyname))))
 			}
 		}
 
 		if t.Filters.RejectRegexp != nil {
-			for keyname, regexp := range t.Filters.RejectRegexp {
-				filters[name] = append(filters[name], makeRegexpFiltersFunction(name, false, true, string(keyname), regexp))
+			for keyname, re := range t.Filters.RejectRegexp {
+				filters[name] = append(filters[name], makeRegexpFiltersFunction(name, false, true, string(keyname), re, m.splitValuesForTableKey(t, string(keyname))))
 			}
 		}
 
@@ -442,8 +539,16 @@ func makeRegexpFiltersFunction(tablename string, virtualTrue bool, virtualFalse 
 	r := regexp.MustCompile(vRegexp)
 	return func(tags osm.Tags, key Key, elemType string, closed bool) bool {
 		if v, ok := tags[vKeyname]; ok {
-			if r.MatchString(v) {
-				return virtualTrue
+			if !splitValues {
+				if r.MatchString(v) {
+					return virtualTrue
+				}
+				return virtualFalse
+			}
+			for _, value := range splitTagValues(v) {
+				if r.MatchString(value) {
+					return virtualTrue
+				}
 			}
 		}
 		return virtualFalse
@@ -452,11 +557,11 @@ func makeRegexpFiltersFunction(tablename string, virtualTrue bool, virtualFalse 
 
 func makeFiltersFunction(tablename string, virtualTrue bool, virtualFalse bool, vKeyname string, vVararr []config.OrderedValue, splitValues bool) func(tags osm.Tags, key Key, elemType string, closed bool) bool {
 
-	if findValueInOrderedValue("__nil__", vVararr) { // check __nil__
+	if findValueInOrderedValue("__nil__", vVararr) {
 		log.Println("[warn] Filter value '__nil__' is not supported ! (tablename:" + tablename + ")")
 	}
 
-	if findValueInOrderedValue("__any__", vVararr) { // check __any__
+	if findValueInOrderedValue("__any__", vVararr) {
 		if len(vVararr) > 1 {
 			log.Println("[warn] Multiple filter value with '__any__' keywords is not valid! (tablename:" + tablename + ")")
 		}
@@ -466,24 +571,40 @@ func makeFiltersFunction(tablename string, virtualTrue bool, virtualFalse bool, 
 			}
 			return virtualFalse
 		}
-	} else if len(vVararr) == 1 { //  IF 1 parameter  THEN we can generate optimal code
+	} else if len(vVararr) == 1 {
 		return func(tags osm.Tags, key Key, elemType string, closed bool) bool {
 			if v, ok := tags[vKeyname]; ok {
-				if config.Value(v) == vVararr[0].Value {
-					return virtualTrue
+				if !splitValues {
+					if config.Value(v) == vVararr[0].Value {
+						return virtualTrue
+					}
+					return virtualFalse
+				}
+				for _, value := range splitTagValues(v) {
+					if config.Value(value) == vVararr[0].Value {
+						return virtualTrue
+					}
 				}
 			}
 			return virtualFalse
 		}
-	} else { //  > 1 parameter  - less optimal code
-		return func(tags osm.Tags, key Key, elemType string, closed bool) bool {
-			if v, ok := tags[vKeyname]; ok {
+	}
+
+	return func(tags osm.Tags, key Key, elemType string, closed bool) bool {
+		if v, ok := tags[vKeyname]; ok {
+			if !splitValues {
 				if findValueInOrderedValue(config.Value(v), vVararr) {
 					return virtualTrue
 				}
+				return virtualFalse
 			}
-			return virtualFalse
+			for _, value := range splitTagValues(v) {
+				if findValueInOrderedValue(config.Value(value), vVararr) {
+					return virtualTrue
+				}
+			}
 		}
+		return virtualFalse
 	}
 }
 

@@ -238,9 +238,12 @@ func TestTagFilterIncludeRegexInvalidPattern(t *testing.T) {
 
 func TestPointMatcher(t *testing.T) {
 	mapping, err := New([]byte(`
+    split_values: true
     tables:
       places:
         type: point
+        split_values: true
+        multi_values: [place]
         columns:
         - key: name
           name: name
@@ -281,11 +284,189 @@ func TestPointMatcher(t *testing.T) {
 		{osm.Tags{"unknown": "baz"}, []Match{}},
 		{osm.Tags{"place": "unknown"}, []Match{}},
 		{osm.Tags{"place": "city"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
+		{osm.Tags{"place": "city;town"}, []Match{
+			{"place", "city", DestTable{Name: "places"}, nil},
+			{"place", "town", DestTable{Name: "places"}, nil},
+		}},
 		{osm.Tags{"place": "city", "highway": "residential"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
 		{osm.Tags{"place": "city", "highway": "bus_stop"}, []Match{
 			{"place", "city", DestTable{Name: "places"}, nil},
 			{"highway", "bus_stop", DestTable{Name: "transport_points"}, nil}},
 		},
+	}
+
+	elem := osm.Node{}
+	m := mapping.PointMatcher
+	for i, test := range tests {
+		elem.Tags = test.tags
+		actual := m.MatchNode(&elem)
+		if !matchesEqual(actual, test.matches) {
+			t.Errorf("unexpected result for case %d: %v != %v", i+1, actual, test.matches)
+		}
+	}
+}
+
+func TestPointMatcherSplitValuesDisabled(t *testing.T) {
+	mapping, err := New([]byte(`
+    tables:
+      places:
+        type: point
+        columns:
+        mapping:
+          place:
+          - city
+          - town
+    `))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		tags    osm.Tags
+		matches []Match
+	}{
+		{osm.Tags{"place": "city;town"}, []Match{}},
+		{osm.Tags{"place": "city"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
+	}
+
+	elem := osm.Node{}
+	m := mapping.PointMatcher
+	for i, test := range tests {
+		elem.Tags = test.tags
+		actual := m.MatchNode(&elem)
+		if !matchesEqual(actual, test.matches) {
+			t.Errorf("unexpected result for case %d: %v != %v", i+1, actual, test.matches)
+		}
+	}
+}
+
+func TestPointMatcherMultiValuesDisabled(t *testing.T) {
+	mapping, err := New([]byte(`
+    split_values: true
+    tables:
+      places:
+        type: point
+        split_values: true
+        columns:
+        mapping:
+          place:
+          - city
+          - town
+    `))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		tags    osm.Tags
+		matches []Match
+	}{
+		{osm.Tags{"place": "city;town"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
+		{osm.Tags{"place": "town;city"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
+	}
+
+	elem := osm.Node{}
+	m := mapping.PointMatcher
+	for i, test := range tests {
+		elem.Tags = test.tags
+		actual := m.MatchNode(&elem)
+		if !matchesEqual(actual, test.matches) {
+			t.Errorf("unexpected result for case %d: %v != %v", i+1, actual, test.matches)
+		}
+	}
+}
+
+func TestPointMatcherFiltersSplitValuesEnabled(t *testing.T) {
+	mapping, err := New([]byte(`
+    split_values: true
+    tables:
+      places:
+        type: point
+        split_values: true
+        filters:
+          require:
+            amenity: [school]
+        mapping:
+          place:
+          - city
+    `))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		tags    osm.Tags
+		matches []Match
+	}{
+		{osm.Tags{"place": "city", "amenity": "school;cafe"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
+		{osm.Tags{"place": "city", "amenity": "cafe"}, []Match{}},
+	}
+
+	elem := osm.Node{}
+	m := mapping.PointMatcher
+	for i, test := range tests {
+		elem.Tags = test.tags
+		actual := m.MatchNode(&elem)
+		if !matchesEqual(actual, test.matches) {
+			t.Errorf("unexpected result for case %d: %v != %v", i+1, actual, test.matches)
+		}
+	}
+}
+
+func TestPointMatcherFiltersSplitValuesDisabled(t *testing.T) {
+	mapping, err := New([]byte(`
+    tables:
+      places:
+        type: point
+        filters:
+          require:
+            amenity: [school]
+        mapping:
+          place:
+          - city
+    `))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		tags    osm.Tags
+		matches []Match
+	}{
+		{osm.Tags{"place": "city", "amenity": "school;cafe"}, []Match{}},
+		{osm.Tags{"place": "city", "amenity": "school"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
+	}
+
+	elem := osm.Node{}
+	m := mapping.PointMatcher
+	for i, test := range tests {
+		elem.Tags = test.tags
+		actual := m.MatchNode(&elem)
+		if !matchesEqual(actual, test.matches) {
+			t.Errorf("unexpected result for case %d: %v != %v", i+1, actual, test.matches)
+		}
+	}
+}
+
+func TestPointMatcherRejectFiltersSplitValuesEnabled(t *testing.T) {
+	mapping, err := New([]byte(`
+    split_values: true
+    tables:
+      places:
+        type: point
+        split_values: true
+        filters:
+          reject:
+            amenity: [school]
+        mapping:
+          place:
+          - city
+    `))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		tags    osm.Tags
+		matches []Match
+	}{
+		{osm.Tags{"place": "city", "amenity": "school;cafe"}, []Match{}},
+		{osm.Tags{"place": "city", "amenity": "cafe"}, []Match{{"place", "city", DestTable{Name: "places"}, nil}}},
 	}
 
 	elem := osm.Node{}
@@ -680,28 +861,32 @@ func stringMapEqual(expected, actual map[string]string) bool {
 }
 
 func matchesEqual(expected []Match, actual []Match) bool {
-	expectedMatches := make(map[DestTable]Match)
-	actualMatches := make(map[DestTable]Match)
-
 	if len(expected) != len(actual) {
 		return false
 	}
 
-	for _, match := range expected {
-		expectedMatches[match.Table] = match
-	}
-	for _, match := range actual {
-		actualMatches[match.Table] = match
+	type matchKey struct {
+		table DestTable
+		key   string
+		value string
 	}
 
-	for name, expectedMatch := range expectedMatches {
-		if actualMatch, ok := actualMatches[name]; ok {
-			if expectedMatch.Table != actualMatch.Table ||
-				expectedMatch.Key != actualMatch.Key ||
-				expectedMatch.Value != actualMatch.Value {
-				return false
-			}
-		} else {
+	expectedMatches := make(map[matchKey]int)
+	for _, match := range expected {
+		expectedMatches[matchKey{table: match.Table, key: match.Key, value: match.Value}]++
+	}
+	for _, match := range actual {
+		key := matchKey{table: match.Table, key: match.Key, value: match.Value}
+		if _, ok := expectedMatches[key]; !ok {
+			return false
+		}
+		expectedMatches[key]--
+		if expectedMatches[key] < 0 {
+			return false
+		}
+	}
+	for _, count := range expectedMatches {
+		if count != 0 {
 			return false
 		}
 	}

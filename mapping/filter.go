@@ -99,10 +99,11 @@ func (f *tagFilter) Filter(tags *osm.Tags) {
 	}
 	for k, v := range *tags {
 		values, ok := f.mappings[Key(k)]
+		splitValues := f.splitAny || f.splitKeys[Key(k)]
 		if ok {
 			if _, ok := values["__any__"]; ok {
 				continue
-			} else if _, ok := values[Value(v)]; ok {
+			} else if mappingValueMatches(values, v, splitValues) {
 				continue
 			} else if _, ok := f.extraTags[Key(k)]; !ok {
 				if f.matchesIncludeRegex(k) {

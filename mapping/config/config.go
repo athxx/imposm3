@@ -120,7 +120,38 @@ type SubMapping struct {
 }
 
 type TypeMappings struct {
-	Points      KeyValues `yaml:"points"`
-	LineStrings KeyValues `yaml:"linestrings"`
-	Polygons    KeyValues `yaml:"polygons"`
+	Points      TypeMapping `yaml:"points"`
+	LineStrings TypeMapping `yaml:"linestrings"`
+	Polygons    TypeMapping `yaml:"polygons"`
+	Any         TypeMapping `yaml:"any"`
+}
+
+type TypeMapping struct {
+	Mapping  KeyValues             `yaml:"mapping"`
+	Mappings map[string]SubMapping `yaml:"mappings"`
+}
+
+func (tm *TypeMapping) UnmarshalYAML(unmarshal func(any) error) error {
+	raw := map[interface{}]interface{}{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+	_, hasMapping := raw["mapping"]
+	_, hasMappings := raw["mappings"]
+	if hasMapping || hasMappings {
+		type alias TypeMapping
+		var parsed alias
+		if err := unmarshal(&parsed); err != nil {
+			return err
+		}
+		*tm = TypeMapping(parsed)
+		return nil
+	}
+
+	var kv KeyValues
+	if err := unmarshal(&kv); err != nil {
+		return err
+	}
+	tm.Mapping = kv
+	return nil
 }
