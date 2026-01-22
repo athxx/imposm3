@@ -134,6 +134,14 @@ func (m *Mapping) prepare() error {
 			return errors.Errorf("missing type for table %s", name)
 		}
 
+		if t.GeometryTransform != "" {
+			normalized, err := normalizeGeometryTransform(t.GeometryTransform)
+			if err != nil {
+				return errors.Wrapf(err, "table %s", name)
+			}
+			t.GeometryTransform = normalized
+		}
+
 		if TableType(t.Type) == GeometryTable {
 			if t.Mapping != nil || t.Mappings != nil {
 				return errors.Errorf("table with type:geometry requires type_mappings for table %s", name)

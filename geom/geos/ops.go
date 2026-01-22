@@ -50,6 +50,30 @@ func (g *Geos) SimplifyPreserveTopology(geom *Geom, tolerance float64) *Geom {
 	return &Geom{simplified}
 }
 
+func (g *Geos) Centroid(geom *Geom) *Geom {
+	centroid := C.GEOSGetCentroid_r(g.v, geom.v)
+	if centroid == nil {
+		return nil
+	}
+	return &Geom{centroid}
+}
+
+func (g *Geos) PointOnSurface(geom *Geom) *Geom {
+	point := C.GEOSPointOnSurface_r(g.v, geom.v)
+	if point == nil {
+		return nil
+	}
+	return &Geom{point}
+}
+
+func (g *Geos) MaximumInscribedCircle(geom *Geom, tolerance float64) *Geom {
+	circle := C.GEOSMaximumInscribedCircle_r(g.v, geom.v, C.double(tolerance))
+	if circle == nil {
+		return nil
+	}
+	return &Geom{circle}
+}
+
 // UnionPolygons tries to merge polygons.
 // Returns a single (Multi)Polygon.
 // Destroys polygons and returns new allocated (Multi)Polygon as necessary.

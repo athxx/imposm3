@@ -102,7 +102,18 @@ func (g *Geos) Clone(geom *Geom) *Geom {
 }
 
 func (g *Geos) SetHandleSrid(srid int) {
+	if g.srid == srid {
+		return
+	}
 	g.srid = srid
+	if g.wkbwriter != nil {
+		C.GEOSWKBWriter_destroy_r(g.v, g.wkbwriter)
+		g.wkbwriter = nil
+	}
+}
+
+func (g *Geos) SRID(geom *Geom) int {
+	return int(C.GEOSGetSRID_r(g.v, geom.v))
 }
 
 func (g *Geos) NumGeoms(geom *Geom) int32 {
