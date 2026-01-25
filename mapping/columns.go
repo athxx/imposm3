@@ -26,7 +26,7 @@ func init() {
 		"direction":            {"direction", "int8", Direction, nil, nil, false},
 		"integer":              {"integer", "int32", Integer, nil, nil, false},
 		"mapping_key":          {"mapping_key", "string", KeyName, nil, nil, false},
-		"mapping_value":        {"mapping_value", "string", ValueName, nil, nil, false},
+		"mapping_value":        {"mapping_value", "string", nil, MakeMappingValue, nil, false},
 		"member_id":            {"member_id", "int64", nil, nil, RelationMemberID, true},
 		"member_role":          {"member_role", "string", nil, nil, RelationMemberRole, true},
 		"member_type":          {"member_type", "int8", nil, nil, RelationMemberType, true},
@@ -102,6 +102,23 @@ func KeyName(val string, elem *osm.Element, geom *geom.Geometry, match Match) an
 
 func ValueName(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	return match.Value
+}
+
+func MakeMappingValue(columnName string, columnType ColumnType, column config.Column) (MakeValue, error) {
+	aliases := column.Aliases
+	return func(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
+		if aliases != nil {
+			if aliasValues, ok := aliases[match.Key]; ok {
+				if alias, ok := aliasValues[match.Value]; ok {
+					return alias
+				}
+				if alias, ok := aliasValues["__any__"]; ok {
+					return alias
+				}
+			}
+		}
+		return match.Value
+	}, nil
 }
 
 func RelationMemberType(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) any {

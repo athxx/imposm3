@@ -275,6 +275,9 @@ func (tm *tagMatcher) match(tags osm.Tags, elemType string, closed bool) []Match
 			for _, filter := range filters {
 				if !filter(tags, Key(match.Key), elemType, closed) {
 					filteredOut = true
+					if isDebugBusStop(tags) {
+						log.Printf("[info] debug node filtered by table filter for %s (key=%s closed=%t relation=%t)", t.Name, match.Key, closed, relation)
+					}
 					break
 				}
 			}
@@ -285,6 +288,9 @@ func (tm *tagMatcher) match(tags osm.Tags, elemType string, closed bool) []Match
 				for _, filter := range filters {
 					if !filter(tags, Key(match.Key), elemType, closed) {
 						filteredOut = true
+						if isDebugBusStop(tags) {
+							log.Printf("[info] debug node filtered by relation filter for %s (key=%s closed=%t)", t.Name, match.Key, closed)
+						}
 						break
 					}
 				}

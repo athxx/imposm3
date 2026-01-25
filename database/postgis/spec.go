@@ -140,6 +140,8 @@ func NewTableSpec(pg *PostGIS, t *config.Table) (*TableSpec, error) {
 	var geomType string
 	if mapping.TableType(t.Type) == mapping.RelationMemberTable {
 		geomType = "geometry"
+	} else if mapping.TableType(t.Type) == mapping.PointOrPolygonTable {
+		geomType = "geometry"
 	} else {
 		geomType = string(t.Type)
 	}
