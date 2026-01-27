@@ -87,7 +87,6 @@ This is a fork of https://github.com/omniscale/imposm3 with various improvements
       args:
         expression: 'tags["name"] + " (" + value + ")"'
   ```
-
 - **`multi_values` (per table)**
   Enables splitting `;`-separated tag values for selected keys and keeps multiple matches for those keys.
   Use `__any__` to apply to all keys in the table.
@@ -131,7 +130,6 @@ This is a fork of https://github.com/omniscale/imposm3 with various improvements
   tags:
     include_regex: ["^addr:.*$", "^contact:.*$"]
   ```
-
 - **Strict YAML parsing**
   Mapping files are parsed with `yaml.UnmarshalStrict`, so unknown fields or wrong shapes fail fast.
 
@@ -143,20 +141,16 @@ It is designed to create databases that are optimized for rendering (i.e. genera
 
 The development of Imposm is sponsored by [Omniscale](https://omniscale.com/).
 
-*Imposm is in production use by the authors. It is actively maintained, with a focus on resolving future incompatibilities with dependencies such as PostGIS. However, there is no capacity for end-user support, and no new features will be developed beyond its existing scope.*
+_Imposm is in production use by the authors. It is actively maintained, with a focus on resolving future incompatibilities with dependencies such as PostGIS. However, there is no capacity for end-user support, and no new features will be developed beyond its existing scope._
 
+## Features
 
-Features
---------
-
-* High-performance
-* Diff support
-* Custom database schemas
-* Generalized geometries
-
+- High-performance
+- Diff support
+- Custom database schemas
+- Generalized geometries
 
 ### In detail
-
 
 - High performance:
   Parallel from the ground up. It distributes parsing and processing to all available CPU cores.
@@ -165,7 +159,7 @@ Features
   Creates tables for different data types. This allows easier styling and better performance for rendering in WMS or tile services.
 
 - Unify values:
-  For example, the boolean values `1`, `on`, `true` and `yes` all become ``TRUE``.
+  For example, the boolean values `1`, `on`, `true` and `yes` all become `TRUE`.
 
 - Filter by tags and values:
   Only import data you are going to render/use.
@@ -190,29 +184,24 @@ Features
 
 - Support for table namespace (PostgreSQL schema)
 
+## Performance
 
-Performance
------------
-
-* Imposm makes full use of all available CPU cores
-* Imposm uses bulk inserts into PostgreSQL with `COPY FROM`
-* Imposm uses efficient intermediate caches for reduced IO load during ways and relations building
-
+- Imposm makes full use of all available CPU cores
+- Imposm uses bulk inserts into PostgreSQL with `COPY FROM`
+- Imposm uses efficient intermediate caches for reduced IO load during ways and relations building
 
 An import in diff-mode on a Hetzner AX102 server (AMD Ryzen 9 7950X3D, 256GB RAM and NVMe storage) of a 78GB planet PBF (2024-01-29) with generalized tables and spatial indices, etc. takes around 7:30h. This is for an import that is ready for minutely updates. The non-diff mode is even faster.
 
 It's recommended that the memory size of the server is roughly twice the size of the PBF extract you are importing. For example: You should have 192GB RAM or more for a current (2024) 78GB planet file, 8GB for a 4GB regional extract, etc.
 Imports with spinning disks will take significantly longer and are not recommended.
 
-
-Installation
-------------
+## Installation
 
 ### Binary
 
 [Binary releases are available at GitHub.](https://github.com/omniscale/imposm3/releases)
 
-These builds are for x86 64bit Linux and require *no* further dependencies. Download, untar and start `imposm`.
+These builds are for x86 64bit Linux and require _no_ further dependencies. Download, untar and start `imposm`.
 Binaries are compatible with Debian 10 and other distributions from 2022 or
 newer. You can build from source if you need to support older distributions.
 
@@ -229,7 +218,6 @@ You need [Go](http://golang.org). 1.21 or higher is recommended.
 Other dependencies are [libleveldb][] and [libgeos][].
 Imposm was tested with recent versions of these libraries, but you might succeed with older versions.
 GEOS >=3.2 is recommended, since it became much more robust when handling invalid geometries.
-
 
 [libleveldb]: https://github.com/google/leveldb/
 [libgeos]: https://libgeos.org/
@@ -259,11 +247,9 @@ See also `Dockerfile` for instructions on how to build standalone binary package
 
 #### LevelDB
 
-For better performance you should use LevelDB >1.21. You can still build with support for 1.21 with ``go build -tags="ldbpre121"`` or ``LEVELDB_PRE_121=1 make build``.
+For better performance you should use LevelDB >1.21. You can still build with support for 1.21 with `go build -tags="ldbpre121"` or `LEVELDB_PRE_121=1 make build`.
 
-
-Usage
------
+## Usage
 
 `imposm` has multiple subcommands. Use `imposm import` for basic imports.
 
@@ -278,7 +264,6 @@ Imposm creates all new tables inside the `import` table schema. So you'll have `
 
     imposm import -connection postgis://user:passwd@host/database \
         -mapping mapping.json -deployproduction
-
 
 You can write some options into a JSON configuration file:
 
@@ -296,29 +281,23 @@ For more options see:
 
     imposm import -help
 
-
 Note: TLS/SSL support is disabled by default. You can re-enable encryption by setting the `PGSSLMODE` environment variable or the `sslmode` connection option to `require` or `verify-full`, eg: `-connect postgis://host/dbname?sslmode=require`.
 
-
-Documentation
--------------
+## Documentation
 
 The latest documentation can be found here: <http://imposm.org/docs/imposm3/latest/>
 
-Support
--------
+## Support
 
 There is a [mailing list at Google Groups](http://groups.google.com/group/imposm) for all questions. You can subscribe by sending an email to: `imposm+subscribe@googlegroups.com`
 
-Development
------------
+## Development
 
 The source code is available at: <https://github.com/omniscale/imposm3/>
 
 You can report any issues at: <https://github.com/omniscale/imposm3/issues>
 
-License
--------
+## License
 
 Imposm is released as open source under the Apache License 2.0. See LICENSE.
 
@@ -327,17 +306,15 @@ All dependencies included as source code are released under a BSD-ish license. S
 All dependencies included in binary releases are released under a BSD-ish license except the GEOS package.
 The GEOS package is released as LGPL3 and is linked dynamically. See LICENSE.bin.
 
+### Test
 
-### Test ###
-
-#### Unit tests ####
+#### Unit tests
 
 To run all unit tests:
 
     make test-unit
 
-
-#### System tests ####
+#### System tests
 
 There are system test that import and update OSM data and verify the database content.
 You need `osmosis` to create the test PBF files.
