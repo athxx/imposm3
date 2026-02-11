@@ -185,6 +185,57 @@ func TestTagFilterRelations(t *testing.T) {
 	}
 }
 
+func TestTagFilterIncludeRegex(t *testing.T) {
+	mapping, err := New([]byte(`
+    tags:
+        include_regex: ['^addr:.*$', '^contact:.*$']
+    tables:
+      highways:
+        type: linestring
+        mapping:
+          highway: [residential]
+    `))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		tags     osm.Tags
+		expected osm.Tags
+	}{
+		{
+			tags:     osm.Tags{"highway": "residential", "addr:city": "A", "contact:phone": "1", "foo": "x"},
+			expected: osm.Tags{"highway": "residential", "addr:city": "A", "contact:phone": "1"},
+		},
+		{
+			tags:     osm.Tags{"addr:housenumber": "1", "addr:street": "Main", "name": "x"},
+			expected: osm.Tags{"addr:housenumber": "1", "addr:street": "Main"},
+		},
+	}
+
+	ways := mapping.WayTagFilter()
+	for i, test := range tests {
+		ways.Filter(&test.tags)
+		if !stringMapEqual(test.tags, test.expected) {
+			t.Errorf("unexpected result for case %d: %v != %v", i+1, test.tags, test.expected)
+		}
+	}
+}
+
+func TestTagFilterIncludeRegexInvalidPattern(t *testing.T) {
+	_, err := New([]byte(`
+    tags:
+        include_regex: ['[foo']
+    tables:
+      highways:
+        type: linestring
+        mapping:
+          highway: [residential]
+    `))
+	if err == nil {
+		t.Fatal("expected invalid include_regex error")
+	}
+}
+
 func TestPointMatcher(t *testing.T) {
 	mapping, err := New([]byte(`
     tables:

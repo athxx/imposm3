@@ -3,6 +3,7 @@ module github.com/omniscale/imposm3
 go 1.26.0
 
 require (
+	github.com/expr-lang/expr v1.17.6
 	github.com/gogo/protobuf v1.3.2
 	github.com/jmhodges/levigo v1.0.1-0.20191214093932-ed89ec741d96
 	github.com/lib/pq v1.10.9

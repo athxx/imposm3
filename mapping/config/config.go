@@ -17,12 +17,16 @@ type Mapping struct {
 }
 
 type Column struct {
-	Name       string         `yaml:"name"`
-	Key        Key            `yaml:"key"`
-	Keys       []Key          `yaml:"keys"`
-	Type       string         `yaml:"type"`
-	Args       map[string]any `yaml:"args"`
-	FromMember bool           `yaml:"from_member"`
+	Name    string                       `yaml:"name"`
+	Key     Key                          `yaml:"key"`
+	Keys    []Key                        `yaml:"keys"`
+	Type    string                       `yaml:"type"`
+	Args    map[string]interface{}       `yaml:"args"`
+	Aliases map[string]map[string]string `yaml:"aliases"`
+	// GeometryTransform can be used to transform geometry columns before insertion.
+	GeometryTransform string `yaml:"geometry_transform"`
+	FromMember        bool   `yaml:"from_member"`
+	Comment           string `yaml:"#"`
 }
 
 type Tables map[string]*Table
@@ -36,6 +40,8 @@ type Table struct {
 	OldFields     []*Column             `yaml:"fields"`
 	Filters       *Filters              `yaml:"filters"`
 	RelationTypes []string              `yaml:"relation_types"`
+	Comment       string                `yaml:"_comment"`
+	MultiValues   []Key                 `yaml:"multi_values"`
 }
 
 type GeneralizedTables map[string]*GeneralizedTable
@@ -52,6 +58,7 @@ type Filters struct {
 	Require       KeyValues      `yaml:"require"`
 	RejectRegexp  KeyRegexpValue `yaml:"reject_regexp"`
 	RequireRegexp KeyRegexpValue `yaml:"require_regexp"`
+	Filter        string         `yaml:"filter"`
 }
 
 type Areas struct {
@@ -60,9 +67,10 @@ type Areas struct {
 }
 
 type Tags struct {
-	LoadAll bool  `yaml:"load_all"`
-	Exclude []Key `yaml:"exclude"`
-	Include []Key `yaml:"include"`
+	LoadAll      bool     `yaml:"load_all"`
+	Exclude      []Key    `yaml:"exclude"`
+	Include      []Key    `yaml:"include"`
+	IncludeRegex []string `yaml:"include_regex"`
 }
 
 type Key string

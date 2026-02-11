@@ -103,6 +103,8 @@ You can ``require`` specific tags or ``reject`` elements that have specific tags
 ``require`` and ``reject`` accept keys and a list of values, similar to a ``mapping``. You can use ``__any__`` to require or reject all values (e.g. ``amenity: [__any__]``).
 
 ``require_regexp`` and ``reject_regexp`` can be used to filter values based on a regular expression. You can use the `Go Regex Tester <https://regex-golang.appspot.com/assets/html/index.html>`_ to test your regular expressions.
+``filter`` can be used for more complex boolean expressions. The expression must return ``true`` to accept an element and ``false`` to reject it.
+The expression environment provides ``tags`` (all loaded tags as a map), ``type`` (``point``, ``way``, or ``relation``) and ``closed`` (``true`` for closed ways and relations).
 
 The following mapping only imports buildings with a `name` tag. Buildings with ``building=no`` or ``building=none`` or buildings with a non-numeric level are not imported.
 
@@ -118,6 +120,7 @@ The following mapping only imports buildings with a `name` tag. Buildings with `
             building: ['no', none]
           reject_regexp:
             level: '^\D+.*$'
+          filter: 'type == "way" and tags["name"] != ""'
         mapping:
           building: [__any__]
         columns:
@@ -129,7 +132,7 @@ The following mapping only imports buildings with a `name` tag. Buildings with `
 
 .. note::
 
-  You can only filter tags that are referenced in the ``mapping`` or ``columns`` of any table. See :ref:`tags` on how to make additional tags available for filtering.
+  Filter expressions only see loaded tags. By default this is limited to tags referenced in the ``mapping`` or ``columns`` of any table. See :ref:`tags` on how to make additional tags available for filtering.
 
 
 Example
@@ -468,7 +471,8 @@ Imposm caches only tags that are required for a ``mapping`` or for any ``columns
 
 Add ``load_all`` to the ``tags`` object inside your mapping file. You can still exclude tags with the ``exclude`` option. ``exclude`` supports a simple shell file name pattern matching. ``exclude`` has only effect when ``load_all`` is enabled.
 
-Alternatively you can list all tags that you want to include with the ``include`` option. ``include`` does not support pattern matching and it has no effect when ``load_all`` is used.
+Alternatively you can list all tags that you want to include with the ``include`` option. ``include`` has no effect when ``load_all`` is used.
+For regular expression based key matching you can use ``include_regex``. ``include_regex`` also has no effect when ``load_all`` is used.
 
 To load all tags except ``created_by``, ``source``, and ``tiger:county``, ``tiger:tlid``, ``tiger:upload_uuid``, etc:
 
@@ -486,6 +490,13 @@ To load specific data about amenities for inclusion into an `hstore_tags` column
 
     tags:
       include: [operator, opening_hours, wheelchair, website, phone, cuisine]
+
+To include all ``addr:*`` and ``contact:*`` tags:
+
+.. code-block:: yaml
+
+    tags:
+      include_regex: ['^addr:.*$', '^contact:.*$']
 
 
 

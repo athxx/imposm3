@@ -443,6 +443,81 @@ tables:
 	)
 }
 
+func TestFilters_expression(t *testing.T) {
+	filterTest(
+		t,
+		`
+tables:
+  named_roads:
+    fields:
+    - name: id
+      type: id
+    - key: highway
+      name: highway
+      type: string
+    filters:
+      filter: 'type == "way" and tags["name"] != ""'
+    mapping:
+      highway:
+      - __any__
+    type: linestring
+`,
+		[]osm.Tags{
+			osm.Tags{"highway": "residential", "name": "Main St"},
+			osm.Tags{"highway": "service", "name": "Depot Road"},
+		},
+		[]osm.Tags{
+			osm.Tags{"highway": "residential"},
+			osm.Tags{"name": "Main St"},
+			osm.Tags{"highway": "__any__", "name": ""},
+		},
+	)
+}
+
+func TestFilters_expression_closed(t *testing.T) {
+	const mapping = `
+tables:
+  open_roads:
+    fields:
+    - name: id
+      type: id
+    - key: highway
+      name: highway
+      type: string
+    filters:
+      filter: '!closed'
+    mapping:
+      highway:
+      - __any__
+    type: linestring
+`
+
+	configTestMapping, err := New([]byte(mapping))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	openWay := osm.Way{
+		Element: osm.Element{
+			Tags: osm.Tags{"highway": "residential"},
+		},
+		Refs: []int64{1, 2, 3},
+	}
+	if matches := configTestMapping.LineStringMatcher.MatchWay(&openWay); len(matches) == 0 {
+		t.Fatalf("open way should match expression filter")
+	}
+
+	closedWay := osm.Way{
+		Element: osm.Element{
+			Tags: osm.Tags{"highway": "residential"},
+		},
+		Refs: []int64{1, 2, 3, 1},
+	}
+	if matches := configTestMapping.LineStringMatcher.MatchWay(&closedWay); len(matches) != 0 {
+		t.Fatalf("closed way should be rejected by expression filter")
+	}
+}
+
 func filterTest(t *testing.T, mapping string, accept []osm.Tags, reject []osm.Tags) {
 	var configTestMapping *Mapping
 	var err error
