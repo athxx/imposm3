@@ -1,5 +1,141 @@
-Imposm
-======
+# Imposm with improvements
+
+This is a fork of https://github.com/omniscale/imposm3 with various improvements, implemented with significant help from Codex.
+
+## Mapping extensions in this fork
+
+- **`geometry_transform` (column-level, geometry columns only)**
+  Apply a transform to geometry values before insert.
+  Supported values: `centroid`, `center`, `point_on_surface`, `pole_of_inaccessibility`.
+
+  Example:
+
+  ```yaml
+  columns:
+    - name: geometry
+      type: geometry
+      geometry_transform: point_on_surface
+    - name: geometry_raw
+      type: geometry
+  ```
+
+- **New table type: `point_or_polygon`**
+  Matches **nodes** and **polygons/multipolygons** only (no linestrings).
+
+  Example:
+
+  ```yaml
+  type: point_or_polygon
+  ```
+
+- **`type_mappings.any`**
+  Allows tag mappings to match across all geometry types for that table.
+  Works with `type: geometry` and `type: point_or_polygon`.
+
+  Example:
+
+  ```yaml
+  type_mappings:
+    any:
+      mapping:
+        amenity: [school, hospital]
+  ```
+
+- **`type_mappings.*` supports `mapping` and `mappings` (sub-mappings)**
+  Same structure as top-level `mapping`/`mappings`.
+
+  Example:
+
+  ```yaml
+  type_mappings:
+    any:
+      mapping:
+        highway: [bus_stop]
+      mappings:
+        stops:
+          mapping:
+            highway: [bus_stop]
+  ```
+
+- **`mapping_value` aliases (per column)**
+  Remap mapping values for a specific key; supports `__any__` as catch-all per key.
+
+  Example:
+
+  ```yaml
+  columns:
+    - name: type
+      type: mapping_value
+      aliases:
+        power:
+          tower: power_tower
+          __any__: power_other
+  ```
+
+- **New column type: `expression` (string result)**
+  Compute a column value with `expr-lang/expr`.
+  The expression must return a string. If it returns another type or evaluation fails, the value is `NULL`.
+  Language reference: https://expr-lang.org/docs/language-definition
+  Available variables: `tags`, `id`, `key`, `value`, `tag`.
+
+  Example:
+
+  ```yaml
+  columns:
+    - name: label
+      type: expression
+      args:
+        expression: 'tags["name"] + " (" + value + ")"'
+  ```
+
+- **`multi_values` (per table)**
+  Enables splitting `;`-separated tag values for selected keys and keeps multiple matches for those keys.
+  Use `__any__` to apply to all keys in the table.
+  This also affects filters (`require`/`reject`/`*_regexp`) for the same keys.
+
+  Example:
+
+  ```yaml
+  tables:
+    places:
+      type: point
+      multi_values: [place]
+      mapping:
+        place: [city, town, village]
+  ```
+
+- **`filters.filter` (expression-based table filter)**
+  Add a boolean expression for advanced filter logic using (Expr)[https://expr-lang.org/docs/language-definition].
+  Expression variables: `tags` (map), `type` (`point|way|relation`), `closed` (bool).
+  Return `true` to accept, `false` to reject.
+
+  Example:
+
+  ```yaml
+  tables:
+    sports:
+      type: point_or_polygon
+      filters:
+        filter: 'type == "way" and tags["disused:leisure"] == ""'
+      mapping:
+        sport: [tennis]
+  ```
+
+- **`tags.include_regex` (global tag-key include by regex)**
+  Keep extra tags based on regular expressions, without enabling `tags.load_all`.
+  Useful for namespaces like `addr:*` or `contact:*`.
+
+  Example:
+
+  ```yaml
+  tags:
+    include_regex: ["^addr:.*$", "^contact:.*$"]
+  ```
+
+- **Strict YAML parsing**
+  Mapping files are parsed with `yaml.UnmarshalStrict`, so unknown fields or wrong shapes fail fast.
+
+# Imposm
 
 Imposm is an importer for OpenStreetMap data. It reads PBF files and imports the data into PostgreSQL/PostGIS. It can also automatically update the database with the latest changes from OSM.
 

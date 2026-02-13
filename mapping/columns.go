@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/expr-lang/expr"
 	osm "github.com/omniscale/go-osm"
 	"github.com/omniscale/imposm3/log"
 
@@ -39,6 +40,7 @@ func init() {
 		"webmerc_area":         {"webmerc_area", "float32", WebmercArea, nil, nil, false},
 		"zorder":               {"zorder", "int32", nil, MakeZOrder, nil, false},
 		"enumerate":            {"enumerate", "int32", nil, MakeEnumerate, nil, false},
+		"expression":           {"expression", "string", nil, MakeExpression, nil, false},
 		"string_suffixreplace": {"string_suffixreplace", "string", nil, MakeSuffixReplace, nil, false},
 
 		"categorize_int":             {Name: "categorize_int", GoType: "int32", MakeFunc: MakeCategorizeInt},
@@ -357,6 +359,50 @@ func MakeEnumerate(columnName string, columnType ColumnType, column config.Colum
 	}
 
 	return enumerate, nil
+}
+
+type columnExprEnv struct {
+	Tags  map[string]string `expr:"tags"`
+	ID    int64             `expr:"id"`
+	Key   string            `expr:"key"`
+	Value string            `expr:"value"`
+	Tag   string            `expr:"tag"`
+}
+
+func MakeExpression(columnName string, columnType ColumnType, column config.Column) (MakeValue, error) {
+	rawExpression, ok := column.Args["expression"]
+	if !ok {
+		return nil, errors.New("missing expression in args for expression")
+	}
+
+	expressionText, ok := rawExpression.(string)
+	if !ok {
+		return nil, errors.New("expression in args for expression not a string")
+	}
+
+	program, err := expr.Compile(expressionText, expr.Env(columnExprEnv{}))
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid expression for column %s", columnName)
+	}
+
+	expressionValue := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+		result, err := expr.Run(program, columnExprEnv{
+			Tags:  elem.Tags,
+			ID:    elem.ID,
+			Key:   match.Key,
+			Value: match.Value,
+			Tag:   val,
+		})
+		if err != nil {
+			return nil
+		}
+		stringResult, ok := result.(string)
+		if !ok {
+			return nil
+		}
+		return stringResult
+	}
+	return expressionValue, nil
 }
 
 func decodeEnumArg(column config.Column, key string) (map[string]int, error) {

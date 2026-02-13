@@ -352,3 +352,62 @@ func TestHstoreString(t *testing.T) {
 	}
 
 }
+
+func TestMakeExpression(t *testing.T) {
+	column := config.Column{
+		Name: "expr",
+		Type: "expression",
+		Args: map[string]interface{}{"expression": `tags["name"] + "-" + value + "-" + key + "-" + tag`},
+	}
+	expressionValue, err := MakeExpression("expr", ColumnType{}, column)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	elem := &osm.Element{
+		ID:   42,
+		Tags: osm.Tags{"name": "Court"},
+	}
+	match := Match{Key: "sport", Value: "tennis"}
+	result := expressionValue("grass", elem, nil, match)
+	if result != "Court-tennis-sport-grass" {
+		t.Fatalf("unexpected expression result: %v", result)
+	}
+}
+
+func TestMakeExpressionInvalidArgs(t *testing.T) {
+	_, err := MakeExpression("expr", ColumnType{}, config.Column{
+		Name: "expr",
+		Type: "expression",
+		Args: map[string]interface{}{},
+	})
+	if err == nil {
+		t.Fatal("expected error for missing expression")
+	}
+
+	_, err = MakeExpression("expr", ColumnType{}, config.Column{
+		Name: "expr",
+		Type: "expression",
+		Args: map[string]interface{}{"expression": 123},
+	})
+	if err == nil {
+		t.Fatal("expected error for non-string expression")
+	}
+}
+
+func TestMakeExpressionNonStringResult(t *testing.T) {
+	column := config.Column{
+		Name: "expr",
+		Type: "expression",
+		Args: map[string]interface{}{"expression": `id`},
+	}
+	expressionValue, err := MakeExpression("expr", ColumnType{}, column)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := expressionValue("", &osm.Element{ID: 42, Tags: osm.Tags{}}, nil, Match{})
+	if result != nil {
+		t.Fatalf("expected nil for non-string expression result, got %v", result)
+	}
+}
