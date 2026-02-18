@@ -115,7 +115,11 @@ func TestComplete(t *testing.T) {
 
 			{"osm_landusages_gen1", 11001, "park", nil},
 			{"osm_landusages_gen1", -13001, "park", nil},
+
+			{"osm_relation_members", -13001, "park", nil},
+			{"osm_relation_members_gen1", -13001, "park", nil},
 		})
+
 	})
 
 	t.Run("ChangedHoleTags1", func(t *testing.T) {
@@ -527,6 +531,9 @@ func TestComplete(t *testing.T) {
 
 			{"osm_landusages_gen1", 11001, Missing, nil},
 			{"osm_landusages_gen1", -13001, Missing, nil},
+
+			{"osm_relation_members", -13001, "water", nil},
+			{"osm_relation_members_gen1", -13001, "water", nil},
 		})
 	})
 

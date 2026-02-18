@@ -50,6 +50,11 @@
             "source": "landusages_gen1",
             "sql_filter": "ST_Area(geometry)>500000.000000",
             "tolerance": 200.0
+        },
+        "relation_members_gen1": {
+            "source": "relation_members",
+            "sql_filter": null,
+            "tolerance": 50.0
         }
     },
     "tables": {
@@ -873,6 +878,60 @@
                 ],
                 "leisure": [
                     "swimming_pool"
+                ]
+            }
+        },
+        "relation_members": {
+            "columns": [
+                {
+                    "type": "id",
+                    "name": "osm_id",
+                    "key": null
+                },
+                {
+                    "type": "validated_geometry",
+                    "name": "geometry",
+                    "key": null
+                },
+                {
+                    "type": "string",
+                    "name": "name",
+                    "key": "name"
+                },
+                {
+                    "type": "mapping_value",
+                    "name": "type",
+                    "key": null
+                },
+                {
+                    "name": "member",
+                    "type": "member_id"
+                },
+                {
+                    "name": "index",
+                    "type": "member_index"
+                },
+                {
+                    "name": "role",
+                    "type": "member_role"
+                },
+                {
+                    "name": "member_type",
+                    "type": "member_type"
+                },
+                {
+                    "type": "webmerc_area",
+                    "name": "area",
+                    "key": null
+                }
+            ],
+            "type": "relation_member",
+            "mapping": {
+                "natural": [
+                    "water"
+                ],
+                "landuse": [
+                    "park"
                 ]
             }
         }

@@ -485,6 +485,17 @@ func (pg *PostGIS) InsertRelationMember(rel osm.Relation, m osm.Member, mi int, 
 			return err
 		}
 	}
+	if pg.updateGeneralizedTables {
+		genMatches := pg.generalizedFromMatches(matches)
+		if len(genMatches) > 0 {
+			pg.updateIDsMu.Lock()
+			for _, generalizedTable := range genMatches {
+				pg.updatedIDs[generalizedTable.Name] = append(pg.updatedIDs[generalizedTable.Name], rel.ID)
+
+			}
+			pg.updateIDsMu.Unlock()
+		}
+	}
 	return nil
 }
 
