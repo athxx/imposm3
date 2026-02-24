@@ -47,8 +47,8 @@ func init() {
 	}
 }
 
-type MakeValue func(string, *osm.Element, *geom.Geometry, Match) interface{}
-type MakeMemberValue func(*osm.Relation, *osm.Member, int, Match) interface{}
+type MakeValue func(string, *osm.Element, *geom.Geometry, Match) any
+type MakeMemberValue func(*osm.Relation, *osm.Member, int, Match) any
 
 type MakeMakeValue func(string, ColumnType, config.Column) (MakeValue, error)
 
@@ -64,25 +64,25 @@ type ColumnType struct {
 	FromMember bool
 }
 
-func Bool(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func Bool(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	if val == "" || val == "0" || val == "false" || val == "no" {
 		return false
 	}
 	return true
 }
 
-func BoolInt(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func BoolInt(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	if val == "" || val == "0" || val == "false" || val == "no" {
 		return 0
 	}
 	return 1
 }
 
-func String(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func String(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	return val
 }
 
-func Integer(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func Integer(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	v, err := strconv.ParseInt(val, 10, 32)
 	if err != nil {
 		return nil
@@ -90,45 +90,46 @@ func Integer(val string, elem *osm.Element, geom *geom.Geometry, match Match) in
 	return v
 }
 
-func ID(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func ID(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	return elem.ID
 }
 
-func KeyName(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func KeyName(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	return match.Key
 }
 
-func ValueName(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func ValueName(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	return match.Value
 }
 
-func RelationMemberType(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) interface{} {
+func RelationMemberType(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) any {
 	return member.Type
 }
 
-func RelationMemberRole(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) interface{} {
+func RelationMemberRole(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) any {
 	return member.Role
 }
 
-func RelationMemberID(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) interface{} {
+func RelationMemberID(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) any {
 	return member.ID
 }
 
-func RelationMemberIndex(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) interface{} {
+func RelationMemberIndex(rel *osm.Relation, member *osm.Member, memberIndex int, match Match) any {
 	return memberIndex
 }
 
-func Direction(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
-	if val == "1" || val == "yes" || val == "true" {
+func Direction(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
+	switch val {
+	case "1", "yes", "true":
 		return 1
-	} else if val == "-1" {
+	case "-1":
 		return -1
-	} else {
+	default:
 		return 0
 	}
 }
 
-func Geometry(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func Geometry(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	return string(geom.Wkb)
 }
 
@@ -137,7 +138,7 @@ func MakePseudoArea(columnName string, columnType ColumnType, column config.Colu
 	return Area, nil
 }
 
-func Area(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func Area(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	if geom.Geom == nil {
 		return nil
 	}
@@ -148,7 +149,7 @@ func Area(val string, elem *osm.Element, geom *geom.Geometry, match Match) inter
 	return float32(area)
 }
 
-func WebmercArea(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func WebmercArea(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	if geom.Geom == nil {
 		return nil
 	}
@@ -183,7 +184,7 @@ func MakeHStoreString(columnName string, columnType ColumnType, column config.Co
 		}
 
 	}
-	hstoreString := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+	hstoreString := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 		tags := make([]string, 0, len(elem.Tags))
 		for k, v := range elem.Tags {
 			if includeAll || include[k] != 0 {
@@ -210,7 +211,7 @@ func MakeWayZOrder(columnName string, columnType ColumnType, column config.Colum
 		defaultRank = int(val)
 	}
 
-	wayZOrder := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+	wayZOrder := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 		var z int
 		layer, _ := strconv.ParseInt(elem.Tags["layer"], 10, 32)
 
@@ -261,7 +262,7 @@ func init() {
 	}
 }
 
-func DefaultWayZOrder(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func DefaultWayZOrder(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 	var z int
 	layer, _ := strconv.ParseInt(elem.Tags["layer"], 10, 64)
 	z += int(layer) * 10
@@ -297,7 +298,7 @@ func MakeZOrder(columnName string, columnType ColumnType, column config.Column) 
 		return nil, errors.New("missing ranks in args for zorder")
 	}
 
-	rankList, ok := _rankList.([]interface{})
+	rankList, ok := _rankList.([]any)
 	if !ok {
 		return nil, errors.New("ranks in args for zorder not a list")
 	}
@@ -321,7 +322,7 @@ func MakeZOrder(columnName string, columnType ColumnType, column config.Column) 
 		ranks[rankName] = len(rankList) - i
 	}
 
-	zOrder := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+	zOrder := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 		if key != "" {
 			if r, ok := ranks[elem.Tags[key]]; ok {
 				return r
@@ -342,7 +343,7 @@ func MakeEnumerate(columnName string, columnType ColumnType, column config.Colum
 	if err != nil {
 		return nil, err
 	}
-	enumerate := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+	enumerate := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 		if column.Key != "" {
 			if r, ok := values[val]; ok {
 				return r
@@ -364,7 +365,7 @@ func decodeEnumArg(column config.Column, key string) (map[string]int, error) {
 		return nil, errors.Errorf("missing '%v' in args for %s", key, column.Type)
 	}
 
-	valuesList, ok := _valuesList.([]interface{})
+	valuesList, ok := _valuesList.([]any)
 	if !ok {
 		return nil, errors.Errorf("'%v' in args for %s not a list", key, column.Type)
 	}
@@ -387,7 +388,7 @@ func MakeSuffixReplace(columnName string, columnType ColumnType, column config.C
 		return nil, errors.New("missing suffixes in args for string_suffixreplace")
 	}
 
-	changes, ok := _changes.(map[interface{}]interface{})
+	changes, ok := _changes.(map[any]any)
 	if !ok {
 		return nil, errors.New("suffixes in args for string_suffixreplace not a dict")
 	}
@@ -411,7 +412,7 @@ func MakeSuffixReplace(columnName string, columnType ColumnType, column config.C
 		return strChanges[match]
 	}
 
-	suffixReplace := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+	suffixReplace := func(val string, elem *osm.Element, geom *geom.Geometry, match Match) any {
 		if val != "" {
 			return re.ReplaceAllStringFunc(val, replFunc)
 		}

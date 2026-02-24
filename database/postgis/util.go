@@ -20,8 +20,8 @@ import (
 // http://www.postgresql.org/docs/9.1/static/runtime-config-connection.html
 
 func disableDefaultSsl(params string) string {
-	parts := strings.Fields(params)
-	for _, p := range parts {
+	parts := strings.FieldsSeq(params)
+	for p := range parts {
 		if strings.HasPrefix(p, "sslmode=") {
 			return params
 		}
@@ -85,7 +85,7 @@ func dropTableIfExists(tx *sql.Tx, schema, table string) error {
 	sqlStmt := fmt.Sprintf("SELECT DropGeometryTable('%s', '%s');",
 		schema, table)
 	row := tx.QueryRow(sqlStmt)
-	var void interface{}
+	var void any
 	err = row.Scan(&void)
 	if err != nil {
 		return &SQLError{sqlStmt, err}
@@ -117,7 +117,7 @@ func newWorkerPool(worker, tasks int) *workerPool {
 		make(chan error, tasks),
 		&sync.WaitGroup{},
 	}
-	for i := 0; i < worker; i++ {
+	for range worker {
 		p.wg.Add(1)
 		go p.workerLoop()
 	}

@@ -82,7 +82,7 @@ func (txr *TxRouter) Abort() error {
 	return nil
 }
 
-func (txr *TxRouter) Insert(table string, row []interface{}) error {
+func (txr *TxRouter) Insert(table string, row []any) error {
 	tt, ok := txr.Tables[table]
 	if !ok {
 		return errors.New("Insert into unknown table " + table)

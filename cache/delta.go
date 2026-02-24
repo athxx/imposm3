@@ -199,7 +199,7 @@ func (c *DeltaCoordsCache) FillWay(way *osm.Way) error {
 
 func removeSkippedNodes(nodes []osm.Node) []osm.Node {
 	insertPoint := 0
-	for i := 0; i < len(nodes); i++ {
+	for i := range nodes {
 		if i != insertPoint {
 			nodes[insertPoint] = nodes[i]
 		}

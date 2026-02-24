@@ -119,7 +119,7 @@ func TestRingMergeReverseEndpoints(t *testing.T) {
 
 func TestRingMergePermutations(t *testing.T) {
 	// Test all possible permutations of 4 ring segments.
-	for i := 0; i < 16; i++ {
+	for i := range 16 {
 		// test each segment in both directions
 		f1 := i&1 == 0
 		f2 := i&2 == 0

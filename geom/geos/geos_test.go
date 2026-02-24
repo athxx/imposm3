@@ -16,7 +16,7 @@ func BenchmarkWKB(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		cs, _ := g.CreateCoordSeq(10, 2)
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			cs.SetXY(g, uint32(i), float64(i*10), 0)
 		}
 		geom, _ := cs.AsLineString(g)
@@ -34,7 +34,7 @@ func TestIndexQuery(t *testing.T) {
 
 	idx := g.CreateIndex()
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		p := g.FromWkt(fmt.Sprintf("POLYGON((%d 0, 10 0, 10 10, %d 10, %d 0))", i, i, i))
 		if p == nil {
 			t.Fatal()
@@ -64,7 +64,7 @@ func BenchmarkIndexQuery(b *testing.B) {
 	defer g.Finish()
 
 	idx := g.CreateIndex()
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		p := g.FromWkt(fmt.Sprintf("POLYGON((%d 0, 10 0, 10 10, %d 10, %d 0))", i, i, i))
 		if p == nil {
 			b.Fatal()

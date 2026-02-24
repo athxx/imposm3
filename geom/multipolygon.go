@@ -128,7 +128,7 @@ func (r sortableRingsDesc) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
 func buildRelGeometry(g *geos.Geos, rel *osm.Relation, rings []*ring) (*geos.Geom, error) {
 	totalRings := len(rings)
 	shells := map[*ring]bool{rings[0]: true}
-	for i := 0; i < totalRings; i++ {
+	for i := range totalRings {
 		testGeom := g.Prepare(rings[i].geom)
 		if testGeom == nil {
 			return nil, errors.New("Error while preparing geometry")

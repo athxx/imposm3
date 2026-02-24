@@ -1,6 +1,6 @@
 module github.com/omniscale/imposm3
 
-go 1.21.0
+go 1.26.0
 
 require (
 	github.com/gogo/protobuf v1.3.2

@@ -17,12 +17,12 @@ type Mapping struct {
 }
 
 type Column struct {
-	Name       string                 `yaml:"name"`
-	Key        Key                    `yaml:"key"`
-	Keys       []Key                  `yaml:"keys"`
-	Type       string                 `yaml:"type"`
-	Args       map[string]interface{} `yaml:"args"`
-	FromMember bool                   `yaml:"from_member"`
+	Name       string         `yaml:"name"`
+	Key        Key            `yaml:"key"`
+	Keys       []Key          `yaml:"keys"`
+	Type       string         `yaml:"type"`
+	Args       map[string]any `yaml:"args"`
+	FromMember bool           `yaml:"from_member"`
 }
 
 type Tables map[string]*Table
@@ -76,7 +76,7 @@ type OrderedValue struct {
 type KeyValues map[Key][]OrderedValue
 type KeyRegexpValue map[Key]string
 
-func (kv *KeyValues) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (kv *KeyValues) UnmarshalYAML(unmarshal func(any) error) error {
 	if *kv == nil {
 		*kv = make(map[Key][]OrderedValue)
 	}
@@ -91,7 +91,7 @@ func (kv *KeyValues) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if !ok {
 			return fmt.Errorf("mapping key '%s' not a string", k)
 		}
-		values, ok := item.Value.([]interface{})
+		values, ok := item.Value.([]any)
 		if !ok {
 			return fmt.Errorf("mapping key '%s' not a string", k)
 		}

@@ -117,8 +117,7 @@ func ReadPbf(
 
 	for i := 0; int64(i) < nWays; i++ {
 		waysSync.Add(1)
-		waitWriter.Add(1)
-		go func() {
+		waitWriter.Go(func() {
 			var skip, hit int
 
 			m := tagmapping.WayTagFilter()
@@ -154,13 +153,11 @@ func ReadPbf(
 				progress.AddWays(len(ws))
 			}
 
-			waitWriter.Done()
-		}()
+		})
 	}
 
 	for i := 0; int64(i) < nRels; i++ {
-		waitWriter.Add(1)
-		go func() {
+		waitWriter.Go(func() {
 			var skip, hit int
 
 			m := tagmapping.RelationTagFilter()
@@ -192,14 +189,12 @@ func ReadPbf(
 				progress.AddRelations(numWithTags)
 			}
 
-			waitWriter.Done()
-		}()
+		})
 	}
 
 	for i := 0; int64(i) < nCoords; i++ {
 		coordsSync.Add(1)
-		waitWriter.Add(1)
-		go func() {
+		waitWriter.Go(func() {
 			var skip, hit int
 			g := geos.NewGeos()
 			defer g.Finish()
@@ -225,14 +220,12 @@ func ReadPbf(
 				cache.Coords.PutCoords(nds)
 				progress.AddCoords(len(nds))
 			}
-			waitWriter.Done()
-		}()
+		})
 	}
 
 	for i := 0; int64(i) < nNodes; i++ {
 		coordsSync.Add(1)
-		waitWriter.Add(1)
-		go func() {
+		waitWriter.Go(func() {
 			g := geos.NewGeos()
 			defer g.Finish()
 			m := tagmapping.NodeTagFilter()
@@ -260,8 +253,7 @@ func ReadPbf(
 				cache.Nodes.PutNodes(nds)
 				progress.AddNodes(numWithTags)
 			}
-			waitWriter.Done()
-		}()
+		})
 	}
 	ctx := context.Background()
 	if err := parser.Parse(ctx); err != nil {

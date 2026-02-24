@@ -11,8 +11,9 @@ import (
 )
 
 type Logger interface {
-	Println(v ...interface{})
-	Printf(format string, v ...interface{})
+	Print(v ...any)
+	Println(v ...any)
+	Printf(format string, v ...any)
 }
 
 var DefaultLogger *log.Logger
@@ -107,19 +108,23 @@ func SetMinLevel(lvl Level) {
 	defaultFilter.SetMinLevel(lvl)
 }
 
-func Println(v ...interface{}) {
+func Println(v ...any) {
 	DefaultLogger.Println(v...)
 }
 
-func Printf(format string, v ...interface{}) {
+func Print(v ...any) {
+	DefaultLogger.Print(v...)
+}
+
+func Printf(format string, v ...any) {
 	DefaultLogger.Printf(format, v...)
 }
 
-func Fatal(v ...interface{}) {
+func Fatal(v ...any) {
 	DefaultLogger.Fatal(v...)
 }
 
-func Fatalf(format string, v ...interface{}) {
+func Fatalf(format string, v ...any) {
 	DefaultLogger.Fatalf(format, v...)
 }
 

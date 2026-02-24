@@ -81,7 +81,7 @@ func TestPolygonIntersection(t *testing.T) {
 func BenchmarkLineString(b *testing.B) {
 	size := 16
 	nodes := make([]osm.Node, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		nodes[i] = osm.Node{Lat: 0, Long: float64(i)}
 	}
 	g := geos.NewGeos()
@@ -100,7 +100,7 @@ func BenchmarkLineString(b *testing.B) {
 func BenchmarkLineStringNoGeos(b *testing.B) {
 	size := 16
 	nodes := make([]osm.Node, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		nodes[i] = osm.Node{Lat: 0, Long: float64(i)}
 	}
 

@@ -2,7 +2,7 @@ package cache
 
 import (
 	"encoding/json"
-	"io/ioutil"
+
 	"os"
 
 	"github.com/omniscale/imposm3/log"
@@ -96,7 +96,7 @@ func init() {
 
 	cacheConfFile := os.Getenv("IMPOSM_CACHE_CONFIG")
 	if cacheConfFile != "" {
-		data, err := ioutil.ReadFile(cacheConfFile)
+		data, err := os.ReadFile(cacheConfFile)
 		if err != nil {
 			log.Fatal("[fatal] Reading cache config:", err)
 		}

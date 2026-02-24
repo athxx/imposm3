@@ -22,7 +22,7 @@ import (
 
 //export goLogString
 func goLogString(msg *C.char) {
-	log.Printf(C.GoString(msg))
+	log.Print(C.GoString(msg))
 }
 
 type Geos struct {

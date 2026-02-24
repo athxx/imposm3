@@ -18,7 +18,7 @@ func TestIntersectsFeatureField(t *testing.T) {
 			Name: "country",
 			Key:  "",
 			Type: "intersection",
-			Args: map[string]interface{}{"geojson": "be_nl_bounds.geojson", "property": "FIPS_CNTRY"},
+			Args: map[string]any{"geojson": "be_nl_bounds.geojson", "property": "FIPS_CNTRY"},
 		},
 	)
 	if err != nil {
@@ -26,7 +26,7 @@ func TestIntersectsFeatureField(t *testing.T) {
 	}
 	match := Match{}
 	elem := osm.Element{}
-	geom := geomp.Geometry{nil, nil}
+	geom := geomp.Geometry{}
 	g := geos.NewGeos()
 
 	geom.Geom = g.Point(proj.WgsToMerc(6.76976, 52.60763)) // Germany
@@ -55,7 +55,7 @@ func TestIntersectsField(t *testing.T) {
 			Name: "country",
 			Key:  "",
 			Type: "intersection",
-			Args: map[string]interface{}{"geojson": "be_nl_bounds.geojson"},
+			Args: map[string]any{"geojson": "be_nl_bounds.geojson"},
 		},
 	)
 	if err != nil {
@@ -63,7 +63,7 @@ func TestIntersectsField(t *testing.T) {
 	}
 	match := Match{}
 	elem := osm.Element{}
-	geom := geomp.Geometry{nil, nil}
+	geom := geomp.Geometry{}
 	g := geos.NewGeos()
 
 	geom.Geom = g.Point(proj.WgsToMerc(6.76976, 52.60763)) // Germany
@@ -92,7 +92,7 @@ func BenchmarkIntersectsFeatureField(b *testing.B) {
 			Name: "country",
 			Key:  "",
 			Type: "intersection",
-			Args: map[string]interface{}{"geojson": "be_nl_bounds.geojson", "property": "FIPS_CNTRY"},
+			Args: map[string]any{"geojson": "be_nl_bounds.geojson", "property": "FIPS_CNTRY"},
 		},
 	)
 	if err != nil {
@@ -106,7 +106,7 @@ func BenchmarkIntersectsFeatureField(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// 2,49 : 9,54
 		p := g.Point(proj.WgsToMerc(rand.Float64()*7+2, rand.Float64()*5+49))
-		geom := geomp.Geometry{p, nil}
+		geom := geomp.Geometry{Geom: p}
 		if value := makeValue("", &elem, &geom, match); value == "BE" || value == "NL" {
 			hits += 1
 		}
@@ -123,7 +123,7 @@ func BenchmarkIntersectsField(b *testing.B) {
 			Name: "country",
 			Key:  "",
 			Type: "intersection",
-			Args: map[string]interface{}{"geojson": "be_nl_bounds.geojson"},
+			Args: map[string]any{"geojson": "be_nl_bounds.geojson"},
 		},
 	)
 	if err != nil {
@@ -137,7 +137,7 @@ func BenchmarkIntersectsField(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// 2,49 : 9,54
 		p := g.Point(proj.WgsToMerc(rand.Float64()*7+2, rand.Float64()*5+49))
-		geom := geomp.Geometry{p, nil}
+		geom := geomp.Geometry{Geom: p}
 		if value := makeValue("", &elem, &geom, match); value == true {
 			hits += 1
 		}

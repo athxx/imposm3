@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestDiffCache(t *testing.T) {
 
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newCoordsRefIndex(cacheDir)
@@ -50,7 +49,7 @@ func TestDiffCache(t *testing.T) {
 }
 
 func TestWriteDiff(t *testing.T) {
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newRefIndex(cacheDir, &globalCacheOptions.CoordsIndex)
@@ -60,15 +59,15 @@ func TestWriteDiff(t *testing.T) {
 	defer cache.Close()
 	cache.SetLinearImport(true)
 
-	for w := 0; w < 5; w++ {
-		for n := 0; n < 200; n++ {
+	for w := range 5 {
+		for n := range 200 {
 			cache.Add(int64(n), int64(w))
 		}
 	}
 
 	cache.SetLinearImport(false)
 
-	for n := 0; n < 200; n++ {
+	for n := range 200 {
 		refs := cache.Get(int64(n))
 		if len(refs) != 5 {
 			t.Fatal(refs)
@@ -78,7 +77,7 @@ func TestWriteDiff(t *testing.T) {
 
 func BenchmarkWriteDiff(b *testing.B) {
 	b.StopTimer()
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newRefIndex(cacheDir, &globalCacheOptions.CoordsIndex)
@@ -89,8 +88,8 @@ func BenchmarkWriteDiff(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		for w := 0; w < 5; w++ {
-			for n := 0; n < 200; n++ {
+		for w := range 5 {
+			for n := range 200 {
 				cache.Add(int64(n), int64(w))
 			}
 		}

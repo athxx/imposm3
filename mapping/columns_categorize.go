@@ -15,7 +15,7 @@ func MakeCategorizeInt(fieldName string, fieldType ColumnType, field config.Colu
 		return nil, errors.New("missing 'values' in 'args' for categorize_int")
 	}
 
-	values, ok := _values.(map[interface{}]interface{})
+	values, ok := _values.(map[any]any)
 	if !ok {
 		return nil, errors.New("'values' in 'args' for categorize_int not a dictionary")
 	}
@@ -44,7 +44,7 @@ func MakeCategorizeInt(fieldName string, fieldType ColumnType, field config.Colu
 	}
 	defaultCategory := int(defaultCategoryF)
 
-	makeValue := func(val string, elem *osm.Element, geom *geom.Geometry, m Match) interface{} {
+	makeValue := func(val string, elem *osm.Element, geom *geom.Geometry, m Match) any {
 		if val != "" {
 			if cat, ok := valuesCategory[val]; ok {
 				return cat

@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
@@ -10,7 +9,7 @@ import (
 )
 
 func TestCreateCache(t *testing.T) {
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newNodesCache(cacheDir)
@@ -25,7 +24,7 @@ func TestCreateCache(t *testing.T) {
 }
 
 func TestReadWriteNode(t *testing.T) {
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newNodesCache(cacheDir)
@@ -59,7 +58,7 @@ func TestReadWriteNode(t *testing.T) {
 }
 
 func TestReadWriteWay(t *testing.T) {
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newWaysCache(cacheDir)
@@ -94,7 +93,7 @@ func TestReadWriteWay(t *testing.T) {
 }
 
 func TestReadMissingWay(t *testing.T) {
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newWaysCache(cacheDir)
@@ -112,7 +111,7 @@ func TestReadMissingWay(t *testing.T) {
 
 func BenchmarkWriteWay(b *testing.B) {
 	b.StopTimer()
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newWaysCache(cacheDir)
@@ -134,7 +133,7 @@ func BenchmarkWriteWay(b *testing.B) {
 
 func BenchmarkReadWay(b *testing.B) {
 	b.StopTimer()
-	cacheDir, _ := ioutil.TempDir("", "imposm_test")
+	cacheDir, _ := os.MkdirTemp("", "imposm_test")
 	defer os.RemoveAll(cacheDir)
 
 	cache, err := newWaysCache(cacheDir)
@@ -159,7 +158,7 @@ func BenchmarkReadWay(b *testing.B) {
 }
 
 func TestIDs(t *testing.T) {
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		id := rand.Int63()
 		if idFromKeyBuf(idToKeyBuf(id)) != id {
 			t.Fatal()
@@ -169,7 +168,7 @@ func TestIDs(t *testing.T) {
 	// check that id buffers are in lexical order
 	var id = int64(0)
 	var prevKey string
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		id += rand.Int63n(1e12)
 		buf := idToKeyBuf(id)
 		if prevKey > string(buf) {

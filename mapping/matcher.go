@@ -114,11 +114,11 @@ type Match struct {
 	builder *rowBuilder
 }
 
-func (m *Match) Row(elem *osm.Element, geom *geom.Geometry) []interface{} {
+func (m *Match) Row(elem *osm.Element, geom *geom.Geometry) []any {
 	return m.builder.MakeRow(elem, geom, *m)
 }
 
-func (m *Match) MemberRow(rel *osm.Relation, member *osm.Member, memberIndex int, geom *geom.Geometry) []interface{} {
+func (m *Match) MemberRow(rel *osm.Relation, member *osm.Member, memberIndex int, geom *geom.Geometry) []any {
 	return m.builder.MakeMemberRow(rel, member, memberIndex, geom, *m)
 }
 
@@ -237,14 +237,14 @@ type valueBuilder struct {
 	colType ColumnType
 }
 
-func (v *valueBuilder) Value(elem *osm.Element, geom *geom.Geometry, match Match) interface{} {
+func (v *valueBuilder) Value(elem *osm.Element, geom *geom.Geometry, match Match) any {
 	if v.colType.Func != nil {
 		return v.colType.Func(elem.Tags[string(v.key)], elem, geom, match)
 	}
 	return nil
 }
 
-func (v *valueBuilder) MemberValue(rel *osm.Relation, member *osm.Member, memberIndex int, geom *geom.Geometry, match Match) interface{} {
+func (v *valueBuilder) MemberValue(rel *osm.Relation, member *osm.Member, memberIndex int, geom *geom.Geometry, match Match) any {
 	if v.colType.Func != nil {
 		if v.colType.FromMember {
 			if member.Element == nil {
@@ -264,16 +264,16 @@ type rowBuilder struct {
 	columns []valueBuilder
 }
 
-func (r *rowBuilder) MakeRow(elem *osm.Element, geom *geom.Geometry, match Match) []interface{} {
-	var row []interface{}
+func (r *rowBuilder) MakeRow(elem *osm.Element, geom *geom.Geometry, match Match) []any {
+	var row []any
 	for _, column := range r.columns {
 		row = append(row, column.Value(elem, geom, match))
 	}
 	return row
 }
 
-func (r *rowBuilder) MakeMemberRow(rel *osm.Relation, member *osm.Member, memberIndex int, geom *geom.Geometry, match Match) []interface{} {
-	var row []interface{}
+func (r *rowBuilder) MakeMemberRow(rel *osm.Relation, member *osm.Member, memberIndex int, geom *geom.Geometry, match Match) []any {
+	var row []any
 	for _, column := range r.columns {
 		row = append(row, column.MemberValue(rel, member, memberIndex, geom, match))
 	}

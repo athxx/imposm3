@@ -399,10 +399,7 @@ func (eb *expBackoff) Duration() time.Duration {
 
 func (eb *expBackoff) Wait() <-chan time.Time {
 	timer := time.After(eb.current)
-	eb.current = eb.current * 2
-	if eb.current > eb.max {
-		eb.current = eb.max
-	}
+	eb.current = min(eb.current*2, eb.max)
 	return timer
 }
 

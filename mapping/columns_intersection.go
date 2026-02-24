@@ -84,7 +84,7 @@ func MakeIntersectsFeatureField(fieldName string, fieldType ColumnType, field co
 
 	g := geos.NewGeos()
 
-	makeValue := func(val string, elem *osm.Element, geom *geom.Geometry, m Match) interface{} {
+	makeValue := func(val string, elem *osm.Element, geom *geom.Geometry, m Match) any {
 		indices := g.IndexQuery(idx, geom.Geom)
 
 		for _, idx := range indices {
@@ -112,7 +112,7 @@ func MakeIntersectsField(fieldName string, fieldType ColumnType, field config.Co
 
 	g := geos.NewGeos()
 
-	makeValue := func(val string, elem *osm.Element, geom *geom.Geometry, m Match) interface{} {
+	makeValue := func(val string, elem *osm.Element, geom *geom.Geometry, m Match) any {
 		indices := g.IndexQuery(idx, geom.Geom)
 
 		for _, idx := range indices {

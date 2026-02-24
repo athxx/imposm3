@@ -9,7 +9,7 @@ import (
 )
 
 type fataler interface {
-	Fatalf(string, ...interface{})
+	Fatalf(string, ...any)
 }
 
 func compareNodes(t fataler, a []osm.Node, b []osm.Node) {

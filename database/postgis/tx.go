@@ -10,7 +10,7 @@ import (
 
 type TableTx interface {
 	Begin(*sql.Tx) error
-	Insert(row []interface{}) error
+	Insert(row []any) error
 	Delete(id int64) error
 	End()
 	Commit() error
@@ -25,7 +25,7 @@ type bulkTableTx struct {
 	InsertStmt *sql.Stmt
 	InsertSQL  string
 	wg         *sync.WaitGroup
-	rows       chan []interface{}
+	rows       chan []any
 }
 
 func NewBulkTableTx(pg *PostGIS, spec *TableSpec) TableTx {
@@ -34,7 +34,7 @@ func NewBulkTableTx(pg *PostGIS, spec *TableSpec) TableTx {
 		Table: spec.FullName,
 		Spec:  spec,
 		wg:    &sync.WaitGroup{},
-		rows:  make(chan []interface{}, 64),
+		rows:  make(chan []any, 64),
 	}
 	tt.wg.Add(1)
 	go tt.loop()
@@ -67,7 +67,7 @@ func (tt *bulkTableTx) Begin(tx *sql.Tx) error {
 	return nil
 }
 
-func (tt *bulkTableTx) Insert(row []interface{}) error {
+func (tt *bulkTableTx) Insert(row []any) error {
 	tt.rows <- row
 	return nil
 }
@@ -166,7 +166,7 @@ func (tt *syncTableTx) Begin(tx *sql.Tx) error {
 	return nil
 }
 
-func (tt *syncTableTx) Insert(row []interface{}) error {
+func (tt *syncTableTx) Insert(row []any) error {
 	_, err := tt.InsertStmt.Exec(row...)
 	if err != nil {
 		return &SQLInsertError{SQLError{tt.InsertSQL, err}, row}

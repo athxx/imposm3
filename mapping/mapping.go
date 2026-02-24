@@ -1,7 +1,9 @@
 package mapping
 
 import (
-	"io/ioutil"
+	"os"
+	"slices"
+
 	"regexp"
 
 	osm "github.com/omniscale/go-osm"
@@ -91,7 +93,7 @@ type Mapping struct {
 }
 
 func FromFile(filename string) (*Mapping, error) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -329,16 +331,14 @@ func (m *Mapping) addTypedFilters(tableType TableType, filters tableElementFilte
 	}
 }
 
-func (m *Mapping) addRelationFilters(tableType TableType, filters tableElementFilters) {
+func (m *Mapping) addRelationFilters(_ TableType, filters tableElementFilters) {
 	for name, t := range m.Conf.Tables {
 		if t.RelationTypes != nil {
 			relTypes := t.RelationTypes // copy loop var for closure
 			f := func(tags osm.Tags, key Key, closed bool) bool {
 				if v, ok := tags["type"]; ok {
-					for _, rtype := range relTypes {
-						if v == rtype {
-							return true
-						}
+					if slices.Contains(relTypes, v) {
+						return true
 					}
 				}
 				return false
@@ -418,7 +418,7 @@ func findValueInOrderedValue(v config.Value, list []config.OrderedValue) bool {
 	return false
 }
 
-func makeRegexpFiltersFunction(tablename string, virtualTrue bool, virtualFalse bool, vKeyname string, vRegexp string) func(tags osm.Tags, key Key, closed bool) bool {
+func makeRegexpFiltersFunction(_ string, virtualTrue bool, virtualFalse bool, vKeyname string, vRegexp string) func(tags osm.Tags, key Key, closed bool) bool {
 	// Compile regular expression,  if not valid regexp --> panic !
 	r := regexp.MustCompile(vRegexp)
 	return func(tags osm.Tags, key Key, closed bool) bool {

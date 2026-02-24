@@ -80,7 +80,7 @@ func TestZOrder(t *testing.T) {
 			Name: "z_order",
 			Key:  "",
 			Type: "z_order",
-			Args: map[string]interface{}{"key": "fips", "ranks": []interface{}{"AA", "CC", "FF", "ZZ"}},
+			Args: map[string]any{"key": "fips", "ranks": []any{"AA", "CC", "FF", "ZZ"}},
 		},
 	)
 	if err != nil {
@@ -119,7 +119,7 @@ func TestEnumerate_Match(t *testing.T) {
 			Name: "enumerate",
 			Key:  "",
 			Type: "enumerate",
-			Args: map[string]interface{}{"values": []interface{}{"AA", "CC", "FF", "ZZ"}},
+			Args: map[string]any{"values": []any{"AA", "CC", "FF", "ZZ"}},
 		},
 	)
 	if err != nil {
@@ -154,7 +154,7 @@ func TestEnumerate_Key(t *testing.T) {
 			Name: "enumerate",
 			Key:  "fips",
 			Type: "enumerate",
-			Args: map[string]interface{}{"values": []interface{}{"AA", "CC", "FF", "ZZ"}},
+			Args: map[string]any{"values": []any{"AA", "CC", "FF", "ZZ"}},
 		},
 	)
 	if err != nil {
@@ -187,9 +187,9 @@ func TestWayZOrder(t *testing.T) {
 		config.Column{
 			Name: "zorder",
 			Type: "wayzorder",
-			Args: map[string]interface{}{
+			Args: map[string]any{
 				"default": float64(5),
-				"ranks": []interface{}{
+				"ranks": []any{
 					"path",
 					"footway",
 					"pedestrian",
@@ -287,7 +287,7 @@ func TestAreaColumn(t *testing.T) {
 func TestMakeSuffixReplace(t *testing.T) {
 	column := config.Column{
 		Name: "name", Key: "name", Type: "string_suffixreplace",
-		Args: map[string]interface{}{"suffixes": map[interface{}]interface{}{"Straße": "Str.", "straße": "str."}}}
+		Args: map[string]any{"suffixes": map[any]any{"Straße": "Str.", "straße": "str."}}}
 	suffixReplace, err := MakeSuffixReplace("name", ColumnType{}, column)
 
 	if err != nil {
@@ -318,7 +318,7 @@ func TestHstoreString(t *testing.T) {
 	column = config.Column{
 		Name: "tags",
 		Type: "hstore_tags",
-		Args: map[string]interface{}{"include": []interface{}{"key1", "key2"}},
+		Args: map[string]any{"include": []any{"key1", "key2"}},
 	}
 	hstoreInclude, err := MakeHStoreString("tags", ColumnType{}, column)
 	if err != nil {
@@ -328,7 +328,7 @@ func TestHstoreString(t *testing.T) {
 	for _, test := range []struct {
 		column   MakeValue
 		tags     osm.Tags
-		expected interface{}
+		expected any
 	}{
 		{hstoreAll, osm.Tags{}, ``},
 		{hstoreAll, osm.Tags{"key": "value"}, `"key"=>"value"`},

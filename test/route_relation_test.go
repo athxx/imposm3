@@ -2,7 +2,7 @@ package test
 
 import (
 	"database/sql"
-	"io/ioutil"
+
 	"math"
 	"os"
 	"testing"
@@ -23,7 +23,7 @@ func TestRouteRelation(t *testing.T) {
 	t.Run("Prepare", func(t *testing.T) {
 		var err error
 
-		ts.dir, err = ioutil.TempDir("", "imposm_test")
+		ts.dir, err = os.MkdirTemp("", "imposm_test")
 		if err != nil {
 			t.Fatal(err)
 		}

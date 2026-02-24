@@ -10,11 +10,11 @@ import (
 )
 
 type object struct {
-	Type        string                 `json:"type"`
-	Features    []object               `json:"features"`
-	Geometry    *object                `json:"geometry"`
-	Coordinates []interface{}          `json:"coordinates"`
-	Properties  map[string]interface{} `json:"properties"`
+	Type        string         `json:"type"`
+	Features    []object       `json:"features"`
+	Geometry    *object        `json:"geometry"`
+	Coordinates []any          `json:"coordinates"`
+	Properties  map[string]any `json:"properties"`
 }
 
 type Point struct {
@@ -22,7 +22,7 @@ type Point struct {
 	Lat  float64
 }
 
-func newPointFromCoords(coords []interface{}) (Point, error) {
+func newPointFromCoords(coords []any) (Point, error) {
 	p := Point{}
 	if len(coords) != 2 && len(coords) != 3 {
 		return p, errors.New("point list length not 2 or 3")
@@ -46,11 +46,11 @@ func newPointFromCoords(coords []interface{}) (Point, error) {
 
 type LineString []Point
 
-func newLineStringFromCoords(coords []interface{}) (LineString, error) {
+func newLineStringFromCoords(coords []any) (LineString, error) {
 	ls := LineString{}
 
 	for _, part := range coords {
-		coord, ok := part.([]interface{})
+		coord, ok := part.([]any)
 		if !ok {
 			return ls, errors.New("point not a list")
 		}
@@ -70,7 +70,7 @@ type Feature struct {
 	Properties map[string]string
 }
 
-func stringProperties(properties map[string]interface{}) map[string]string {
+func stringProperties(properties map[string]any) map[string]string {
 	result := make(map[string]string, len(properties))
 	for k, v := range properties {
 		result[k] = fmt.Sprintf("%v", v)
@@ -78,11 +78,11 @@ func stringProperties(properties map[string]interface{}) map[string]string {
 	return result
 }
 
-func newPolygonFromCoords(coords []interface{}) (Polygon, error) {
+func newPolygonFromCoords(coords []any) (Polygon, error) {
 	poly := Polygon{}
 
 	for _, part := range coords {
-		lsCoords, ok := part.([]interface{})
+		lsCoords, ok := part.([]any)
 		if !ok {
 			return poly, errors.New("polygon LineString not a list")
 		}
@@ -95,11 +95,11 @@ func newPolygonFromCoords(coords []interface{}) (Polygon, error) {
 	return poly, nil
 }
 
-func newMultiPolygonFeaturesFromCoords(coords []interface{}) ([]Feature, error) {
+func newMultiPolygonFeaturesFromCoords(coords []any) ([]Feature, error) {
 	features := []Feature{}
 
 	for _, part := range coords {
-		polyCoords, ok := part.([]interface{})
+		polyCoords, ok := part.([]any)
 		if !ok {
 			return features, errors.New("multipolygon polygon not a list")
 		}

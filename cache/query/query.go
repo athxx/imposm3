@@ -137,7 +137,7 @@ func Usage() {
 	os.Exit(1)
 }
 
-func printJSON(obj interface{}) {
+func printJSON(obj any) {
 	bytes, err := json.MarshalIndent(obj, "", "  ")
 	if err != nil {
 		log.Fatal(err)
@@ -147,7 +147,7 @@ func printJSON(obj interface{}) {
 
 func splitIDs(ids string) []int64 {
 	result := []int64{}
-	for _, s := range strings.Split(ids, ",") {
+	for s := range strings.SplitSeq(ids, ",") {
 		id, err := strconv.ParseInt(s, 10, 64)
 		if err != nil {
 			log.Fatal(err)

@@ -29,7 +29,7 @@ func (e *SQLError) Error() string {
 
 type SQLInsertError struct {
 	SQLError
-	data interface{}
+	data any
 }
 
 func (e *SQLInsertError) Error() string {
@@ -78,7 +78,7 @@ func addGeometryColumn(tx *sql.Tx, tableName string, spec TableSpec) error {
 	sql := fmt.Sprintf("SELECT AddGeometryColumn('%s', '%s', '%s', '%d', '%s', 2);",
 		spec.Schema, tableName, colName, spec.Srid, geomType)
 	row := tx.QueryRow(sql)
-	var void interface{}
+	var void any
 	err := row.Scan(&void)
 	if err != nil {
 		return &SQLError{sql, err}
@@ -142,10 +142,7 @@ func (pg *PostGIS) Init() error {
 func (pg *PostGIS) Finish() error {
 	defer log.Step("Creating geometry indices")()
 
-	worker := int(runtime.GOMAXPROCS(0))
-	if worker < 1 {
-		worker = 1
-	}
+	worker := max(int(runtime.GOMAXPROCS(0)), 1)
 
 	p := newWorkerPool(worker, len(pg.Tables)+len(pg.GeneralizedTables))
 	for _, tbl := range pg.Tables {
@@ -215,7 +212,7 @@ func (pg *PostGIS) GeneralizeUpdates() error {
 	for _, table := range pg.sortedGeneralizedTables() {
 		if ids, ok := pg.updatedIDs[table]; ok {
 			for _, id := range ids {
-				pg.txRouter.Insert(table, []interface{}{id})
+				pg.txRouter.Insert(table, []any{id})
 			}
 		}
 	}
@@ -226,10 +223,7 @@ func (pg *PostGIS) GeneralizeUpdates() error {
 func (pg *PostGIS) Generalize() error {
 	defer log.Step("Creating generalized tables")()
 
-	worker := int(runtime.GOMAXPROCS(0))
-	if worker < 1 {
-		worker = 1
-	}
+	worker := max(int(runtime.GOMAXPROCS(0)), 1)
 	// generalized tables can depend on other generalized tables
 	// create tables with non-generalized sources first
 	p := newWorkerPool(worker, len(pg.GeneralizedTables))
@@ -331,10 +325,7 @@ func (pg *PostGIS) generalizeTable(table *GeneralizedTableSpec) error {
 func (pg *PostGIS) Optimize() error {
 	defer log.Step("Clustering on geometry")()
 
-	worker := int(runtime.GOMAXPROCS(0))
-	if worker < 1 {
-		worker = 1
-	}
+	worker := max(int(runtime.GOMAXPROCS(0)), 1)
 
 	p := newWorkerPool(worker, len(pg.Tables)+len(pg.GeneralizedTables))
 
