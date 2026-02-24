@@ -8,7 +8,7 @@
     },
     "areas": {
         "area_tags": ["leisure"],
-        "linear_tags": ["highway"],
+        "linear_tags": ["highway"]
     },
     "generalized_tables": {
         "waterareas_gen1": {
