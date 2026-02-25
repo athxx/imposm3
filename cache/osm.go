@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	NotFound = errors.New("not found")
+	ErrNotFound = errors.New("not found")
 )
 
 const SKIP int64 = -1
@@ -125,18 +125,19 @@ func (c *OSMCache) Remove() error {
 // Also returns true if there are no members of type WayMember or NodeMember.
 func (c *OSMCache) FirstMemberIsCached(members []osm.Member) (bool, error) {
 	for _, m := range members {
-		if m.Type == osm.WayMember {
+		switch m.Type {
+		case osm.WayMember:
 			_, err := c.Ways.GetWay(m.ID)
-			if err == NotFound {
+			if err == ErrNotFound {
 				return false, nil
 			}
 			if err != nil {
 				return false, err
 			}
 			return true, nil
-		} else if m.Type == osm.NodeMember {
+		case osm.NodeMember:
 			_, err := c.Coords.GetCoord(m.ID)
-			if err == NotFound {
+			if err == ErrNotFound {
 				return false, nil
 			}
 			if err != nil {

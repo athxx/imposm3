@@ -23,7 +23,6 @@ type importConfig struct {
 	osmFileName     string
 	mappingFileName string
 	cacheDir        string
-	verbose         bool
 	expireTileDir   string
 }
 
@@ -373,7 +372,7 @@ type checkElem struct {
 func (ts *importTestSuite) assertRecords(t *testing.T, elems []checkElem) {
 	for _, e := range elems {
 		keys := make([]string, 0, len(e.tags))
-		for k, _ := range e.tags {
+		for k := range e.tags {
 			keys = append(keys, k)
 		}
 		r := ts.query(t, e.table, e.id, keys)
@@ -452,7 +451,7 @@ func (ts *importTestSuite) assertGeomType(t *testing.T, e checkElem, expect stri
 
 func (ts *importTestSuite) assertCachedWay(t *testing.T, c *cache.OSMCache, id int64) *osm.Way {
 	way, err := c.Ways.GetWay(id)
-	if err == cache.NotFound {
+	if err == cache.ErrNotFound {
 		t.Errorf("missing way %d", id)
 	} else if err != nil {
 		t.Fatal(err)
@@ -465,9 +464,9 @@ func (ts *importTestSuite) assertCachedWay(t *testing.T, c *cache.OSMCache, id i
 
 func (ts *importTestSuite) assertCachedNode(t *testing.T, c *cache.OSMCache, id int64) *osm.Node {
 	node, err := c.Nodes.GetNode(id)
-	if err == cache.NotFound {
+	if err == cache.ErrNotFound {
 		node, err = c.Coords.GetCoord(id)
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			t.Errorf("missing node %d", id)
 			return nil
 		}

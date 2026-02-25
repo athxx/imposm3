@@ -275,10 +275,7 @@ func (g *Geos) Type(geom *Geom) string {
 
 func (g *Geos) Equals(a, b *Geom) bool {
 	result := C.GEOSEquals_r(g.v, a.v, b.v)
-	if result == 1 {
-		return true
-	}
-	return false
+	return result == 1
 }
 
 func (g *Geos) MakeValid(geom *Geom) (*Geom, error) {

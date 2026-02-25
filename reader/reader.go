@@ -21,7 +21,7 @@ import (
 )
 
 var skipCoords, skipNodes, skipWays bool
-var nParser, nWays, nRels, nNodes, nCoords int64
+var nWays, nRels, nNodes, nCoords int64
 
 func init() {
 	if os.Getenv("IMPOSM_SKIP_COORDS") != "" {
@@ -35,13 +35,13 @@ func init() {
 	}
 	if procConf := os.Getenv("IMPOSM_READ_PROCS"); procConf != "" {
 		parts := strings.Split(procConf, ":")
-		nParser, _ = strconv.ParseInt(parts[0], 10, 32)
+		// parts[0] -> nParser, not used
 		nRels, _ = strconv.ParseInt(parts[1], 10, 32)
 		nWays, _ = strconv.ParseInt(parts[2], 10, 32)
 		nNodes, _ = strconv.ParseInt(parts[3], 10, 32)
 		nCoords, _ = strconv.ParseInt(parts[3], 10, 32)
 	} else {
-		nParser, nRels, nWays, nNodes, nCoords = readersForCpus(runtime.NumCPU())
+		_, nRels, nWays, nNodes, nCoords = readersForCpus(runtime.NumCPU())
 	}
 }
 

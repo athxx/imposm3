@@ -65,7 +65,7 @@ func (p *NodesCache) GetNode(id int64) (*osm.Node, error) {
 		return nil, err
 	}
 	if data == nil {
-		return nil, NotFound
+		return nil, ErrNotFound
 	}
 	node, err := binary.UnmarshalNode(data)
 	if err != nil {

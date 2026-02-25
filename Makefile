@@ -38,7 +38,12 @@ clean:
 	rm -f imposm
 	(cd test && make clean)
 
-test: system-test-files
+check:
+	go vet -mod=vendor ./...
+	if command staticcheck 2>/dev/null; then staticcheck ./...; fi
+	if command govulncheck 2>/dev/null; then govulncheck ./...; fi
+
+test: check system-test-files
 	$(GO) test $(GOTAGS) -parallel 4 ./...
 
 test-unit: system-test-files

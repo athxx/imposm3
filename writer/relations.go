@@ -79,7 +79,7 @@ NextRel:
 		rw.progress.AddRelations(1)
 		err := rw.osmCache.Ways.FillMembers(r.Members)
 		if err != nil {
-			if err != cache.NotFound {
+			if err != cache.ErrNotFound {
 				log.Println("[warn]: ", err)
 			}
 			continue
@@ -90,7 +90,7 @@ NextRel:
 			}
 			err := rw.osmCache.Coords.FillWay(m.Way)
 			if err != nil {
-				if err != cache.NotFound {
+				if err != cache.ErrNotFound {
 					log.Println("[warn]: ", err)
 				}
 				continue NextRel
@@ -169,7 +169,7 @@ func handleMultiPolygon(rw *RelationWriter, r *osm.Relation, geos *geosp.Geos) b
 			log.Println("[warn]: ", err)
 			return false
 		}
-		if duration := time.Now().Sub(start); duration > time.Minute {
+		if duration := time.Since(start); duration > time.Minute {
 			log.Printf("[warn]: clipping relation %d to -limitto took %s", r.ID, duration)
 		}
 		if len(parts) == 0 {
@@ -222,7 +222,7 @@ func handleRelationMembers(rw *RelationWriter, r *osm.Relation, geos *geosp.Geos
 		if m.Type == osm.RelationMember {
 			mrel, err := rw.osmCache.Relations.GetRelation(m.ID)
 			if err != nil {
-				if err != cache.NotFound {
+				if err != cache.ErrNotFound {
 					log.Println("[warn]: ", err)
 				}
 				return false
@@ -231,10 +231,10 @@ func handleRelationMembers(rw *RelationWriter, r *osm.Relation, geos *geosp.Geos
 		} else if m.Type == osm.NodeMember {
 			nd, err := rw.osmCache.Nodes.GetNode(m.ID)
 			if err != nil {
-				if err == cache.NotFound {
+				if err == cache.ErrNotFound {
 					nd, err = rw.osmCache.Coords.GetCoord(m.ID)
 					if err != nil {
-						if err != cache.NotFound {
+						if err != cache.ErrNotFound {
 							log.Println("[warn]: ", err)
 						}
 						return false

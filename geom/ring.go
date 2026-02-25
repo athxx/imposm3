@@ -16,7 +16,6 @@ type ring struct {
 	containedBy int
 	area        float64
 	outer       bool
-	inserted    map[int64]bool
 }
 
 func (r *ring) isClosed() bool {

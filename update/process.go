@@ -135,34 +135,34 @@ func importDiffFile(
 
 		// always delete, to prevent duplicate elements from overlap of initial
 		// import and diff import
-		if err := deleter.Delete(elem); err != nil && err != cache.NotFound {
+		if err := deleter.Delete(elem); err != nil && err != cache.ErrNotFound {
 			return errors.Wrapf(err, "delete element %#v", elem)
 		}
 		if elem.Delete {
 			// no new or modified elem -> remove from cache
 			if elem.Rel != nil {
-				if err := osmCache.Relations.DeleteRelation(elem.Rel.ID); err != nil && err != cache.NotFound {
+				if err := osmCache.Relations.DeleteRelation(elem.Rel.ID); err != nil && err != cache.ErrNotFound {
 					return errors.Wrapf(err, "delete relation %v", elem.Rel)
 				}
 			} else if elem.Way != nil {
-				if err := osmCache.Ways.DeleteWay(elem.Way.ID); err != nil && err != cache.NotFound {
+				if err := osmCache.Ways.DeleteWay(elem.Way.ID); err != nil && err != cache.ErrNotFound {
 					return errors.Wrapf(err, "delete way %v", elem.Way)
 				}
-				if err := diffCache.Ways.Delete(elem.Way.ID); err != nil && err != cache.NotFound {
+				if err := diffCache.Ways.Delete(elem.Way.ID); err != nil && err != cache.ErrNotFound {
 					return errors.Wrapf(err, "delete way references %v", elem.Way)
 				}
 			} else if elem.Node != nil {
-				if err := osmCache.Nodes.DeleteNode(elem.Node.ID); err != nil && err != cache.NotFound {
+				if err := osmCache.Nodes.DeleteNode(elem.Node.ID); err != nil && err != cache.ErrNotFound {
 					return errors.Wrapf(err, "delete node %v", elem.Node)
 				}
-				if err := osmCache.Coords.DeleteCoord(elem.Node.ID); err != nil && err != cache.NotFound {
+				if err := osmCache.Coords.DeleteCoord(elem.Node.ID); err != nil && err != cache.ErrNotFound {
 					return errors.Wrapf(err, "delete coord %v", elem.Node)
 				}
 			}
 		}
 		if elem.Modify && elem.Node != nil && elem.Node.Tags == nil {
 			// handle modifies where a node drops all tags
-			if err := osmCache.Nodes.DeleteNode(elem.Node.ID); err != nil && err != cache.NotFound {
+			if err := osmCache.Nodes.DeleteNode(elem.Node.ID); err != nil && err != cache.ErrNotFound {
 				return errors.Wrapf(err, "delete node %v", elem.Node)
 			}
 		}
@@ -261,7 +261,7 @@ func importDiffFile(
 	for relID := range relIDs {
 		rel, err := osmCache.Relations.GetRelation(relID)
 		if err != nil {
-			if err != cache.NotFound {
+			if err != cache.ErrNotFound {
 				return errors.Wrapf(err, "fetching cached relation %v", relID)
 			}
 			continue
@@ -274,7 +274,7 @@ func importDiffFile(
 	for wayID := range wayIDs {
 		way, err := osmCache.Ways.GetWay(wayID)
 		if err != nil {
-			if err != cache.NotFound {
+			if err != cache.ErrNotFound {
 				return errors.Wrapf(err, "fetching cached way %v", wayID)
 			}
 			continue
@@ -287,7 +287,7 @@ func importDiffFile(
 	for nodeID := range nodeIDs {
 		node, err := osmCache.Nodes.GetNode(nodeID)
 		if err != nil {
-			if err != cache.NotFound {
+			if err != cache.ErrNotFound {
 				return errors.Wrapf(err, "fetching cached node %v", nodeID)
 			}
 			// missing nodes can still be Coords

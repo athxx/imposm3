@@ -101,31 +101,31 @@ func BenchmarkWriteDiff(b *testing.B) {
 func TestMergeIDRefs(t *testing.T) {
 	bunch := []element.IDRefs{}
 
-	bunch = mergeBunch(bunch, []element.IDRefs{element.IDRefs{ID: 50, Refs: []int64{1}}})
+	bunch = mergeBunch(bunch, []element.IDRefs{{ID: 50, Refs: []int64{1}}})
 	if b := bunch[0]; b.ID != 50 || b.Refs[0] != 1 {
 		t.Fatal(bunch)
 	}
 
 	// before
-	bunch = mergeBunch(bunch, []element.IDRefs{element.IDRefs{ID: 40, Refs: []int64{3}}})
+	bunch = mergeBunch(bunch, []element.IDRefs{{ID: 40, Refs: []int64{3}}})
 	if b := bunch[0]; b.ID != 40 || b.Refs[0] != 3 {
 		t.Fatal(bunch)
 	}
 
 	// after
-	bunch = mergeBunch(bunch, []element.IDRefs{element.IDRefs{ID: 70, Refs: []int64{4}}})
+	bunch = mergeBunch(bunch, []element.IDRefs{{ID: 70, Refs: []int64{4}}})
 	if b := bunch[2]; b.ID != 70 || b.Refs[0] != 4 {
 		t.Fatal(bunch)
 	}
 
 	// in between
-	bunch = mergeBunch(bunch, []element.IDRefs{element.IDRefs{ID: 60, Refs: []int64{5}}})
+	bunch = mergeBunch(bunch, []element.IDRefs{{ID: 60, Refs: []int64{5}}})
 	if b := bunch[2]; b.ID != 60 || b.Refs[0] != 5 {
 		t.Fatal(bunch)
 	}
 
 	// same (50:1 already inserted)
-	bunch = mergeBunch(bunch, []element.IDRefs{element.IDRefs{ID: 50, Refs: []int64{0, 5}}})
+	bunch = mergeBunch(bunch, []element.IDRefs{{ID: 50, Refs: []int64{0, 5}}})
 	if b := bunch[1]; b.ID != 50 || len(b.Refs) != 3 ||
 		b.Refs[0] != 0 || b.Refs[1] != 1 || b.Refs[2] != 5 {
 		t.Fatal(bunch)
@@ -136,13 +136,13 @@ func TestMergeIDRefs(t *testing.T) {
 	}
 
 	// remove multiple
-	bunch = mergeBunch(bunch, []element.IDRefs{element.IDRefs{ID: 40, Refs: []int64{}}, element.IDRefs{ID: 60, Refs: []int64{}}})
+	bunch = mergeBunch(bunch, []element.IDRefs{{ID: 40, Refs: []int64{}}, {ID: 60, Refs: []int64{}}})
 	if bunch[0].ID != 50 || bunch[1].ID != 70 || len(bunch) != 2 {
 		t.Fatal(bunch)
 	}
 
 	// add multiple
-	bunch = mergeBunch(bunch, []element.IDRefs{element.IDRefs{ID: 40, Refs: []int64{1}}, element.IDRefs{ID: 60, Refs: []int64{1}}, element.IDRefs{ID: 80, Refs: []int64{1}}})
+	bunch = mergeBunch(bunch, []element.IDRefs{{ID: 40, Refs: []int64{1}}, {ID: 60, Refs: []int64{1}}, {ID: 80, Refs: []int64{1}}})
 	if len(bunch) != 5 || bunch[0].ID != 40 ||
 		bunch[2].ID != 60 || bunch[4].ID != 80 {
 		t.Fatal(bunch)

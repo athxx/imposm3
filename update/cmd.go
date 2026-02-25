@@ -12,7 +12,6 @@ import (
 
 	"github.com/omniscale/go-osm/replication"
 	"github.com/omniscale/go-osm/replication/diff"
-	"github.com/omniscale/go-osm/state"
 	diffstate "github.com/omniscale/go-osm/state"
 	"github.com/omniscale/imposm3/cache"
 	"github.com/omniscale/imposm3/config"
@@ -50,7 +49,7 @@ func Run(baseOpts config.Base) {
 		log.SetMinLevel(log.LInfo)
 	}
 
-	s, err := state.ParseFile(filepath.Join(baseOpts.DiffDir, LastStateFilename))
+	s, err := diffstate.ParseFile(filepath.Join(baseOpts.DiffDir, LastStateFilename))
 	if err != nil {
 		log.Fatal("[fatal] Unable to read last.state.txt:", err)
 	}
@@ -139,7 +138,7 @@ func diffImportLoop(baseOpts config.Base, nextSeq <-chan replication.Sequence) e
 
 	u := updater{
 		baseOpts:       baseOpts,
-		commitEachDiff: baseOpts.CommitLatest == false,
+		commitEachDiff: !baseOpts.CommitLatest,
 
 		db:              db.(database.FullDB),
 		osmCache:        osmCache,

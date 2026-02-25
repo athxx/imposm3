@@ -500,7 +500,7 @@ func TestComplete(t *testing.T) {
 
 		c := ts.cache(t)
 		defer c.Close()
-		if _, err := c.Coords.GetCoord(10000); err != cache.NotFound {
+		if _, err := c.Coords.GetCoord(10000); err != cache.ErrNotFound {
 			t.Fatal("coord not missing")
 		}
 
@@ -620,7 +620,7 @@ func TestComplete(t *testing.T) {
 		c := ts.cache(t)
 		defer c.Close()
 		_, err := c.Coords.GetCoord(20002)
-		if err != cache.NotFound {
+		if err != cache.ErrNotFound {
 			t.Error("found deleted node")
 		}
 
@@ -673,7 +673,7 @@ func TestComplete(t *testing.T) {
 		ts.assertCachedWay(t, c, 50111)
 
 		_, err := c.Ways.GetWay(20002)
-		if err != cache.NotFound {
+		if err != cache.ErrNotFound {
 			t.Error("found deleted node")
 		}
 

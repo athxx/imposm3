@@ -45,12 +45,12 @@ func TestReadWriteNode(t *testing.T) {
 	}
 	defer cache.Close()
 
-	data, err := cache.GetNode(1234)
+	data, _ := cache.GetNode(1234)
 	if data.ID != 1234 || data.Tags["foo"] != "bar" {
 		t.Errorf("unexpected result of GetNode: %v", data)
 	}
 
-	data, err = cache.GetNode(99)
+	data, _ = cache.GetNode(99)
 	if data != nil {
 		t.Error("missing node not nil")
 	}

@@ -31,7 +31,7 @@ func (b *coordsBunch) GetCoord(id int64) (*osm.Node, error) {
 		nd := b.coords[idx] // create copy prevent to race when node gets reprojected
 		return &nd, nil
 	}
-	return nil, NotFound
+	return nil, ErrNotFound
 }
 
 func (b *coordsBunch) DeleteCoord(id int64) {
@@ -365,7 +365,7 @@ func (c *DeltaCoordsCache) FirstRefIsCached(refs []int64) (bool, error) {
 		return false, nil
 	}
 	_, err := c.GetCoord(refs[0])
-	if err == NotFound {
+	if err == ErrNotFound {
 		return false, nil
 	}
 	if err != nil {

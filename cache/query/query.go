@@ -55,7 +55,7 @@ func collectRelations(osmCache *cache.OSMCache, ids []int64, recurse bool) relat
 	for _, id := range ids {
 		sid := strconv.FormatInt(id, 10)
 		rel, err := osmCache.Relations.GetRelation(id)
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			rels[sid] = nil
 		} else if err != nil {
 			log.Fatal(err)
@@ -81,7 +81,7 @@ func collectWays(osmCache *cache.OSMCache, diffCache *cache.DiffCache, ids []int
 	for _, id := range ids {
 		sid := strconv.FormatInt(id, 10)
 		w, err := osmCache.Ways.GetWay(id)
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			ws[sid] = nil
 		} else if err != nil {
 			log.Fatal(err)
@@ -106,12 +106,12 @@ func collectNodes(osmCache *cache.OSMCache, diffCache *cache.DiffCache, ids []in
 	for _, id := range ids {
 		sid := strconv.FormatInt(id, 10)
 		n, err := osmCache.Nodes.GetNode(id)
-		if err != cache.NotFound && err != nil {
+		if err != cache.ErrNotFound && err != nil {
 			log.Fatal(err)
 		}
 		if n == nil {
 			n, err = osmCache.Coords.GetCoord(id)
-			if err == cache.NotFound {
+			if err == cache.ErrNotFound {
 				ns[sid] = nil
 			} else if err != nil {
 				log.Fatal(err)

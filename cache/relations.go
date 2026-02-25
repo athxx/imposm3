@@ -85,7 +85,7 @@ func (p *RelationsCache) GetRelation(id int64) (*osm.Relation, error) {
 		return nil, err
 	}
 	if data == nil {
-		return nil, NotFound
+		return nil, ErrNotFound
 	}
 	relation, err := binary.UnmarshalRelation(data)
 	if err != nil {

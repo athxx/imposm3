@@ -17,11 +17,12 @@ import (
 
 // >>> list(tile_bbox((-1, 1, 0.49, 1.51), 0.5)) #doctest: +NORMALIZE_WHITESPACE
 // [(-1.0, 1.0, -0.5, 1.5),
-//  (-1.0, 1.5, -0.5, 2.0),
-//  (-0.5, 1.0, 0.0, 1.5),
-//  (-0.5, 1.5, 0.0, 2.0),
-//  (0.0, 1.0, 0.5, 1.5),
-//  (0.0, 1.5, 0.5, 2.0)]
+//
+//	(-1.0, 1.5, -0.5, 2.0),
+//	(-0.5, 1.0, 0.0, 1.5),
+//	(-0.5, 1.5, 0.0, 2.0),
+//	(0.0, 1.0, 0.5, 1.5),
+//	(0.0, 1.5, 0.5, 2.0)]
 func tileBounds(bounds geos.Bounds, width float64) []geos.Bounds {
 	var results []geos.Bounds
 	minX := math.Floor(bounds.MinX/width) * width
@@ -308,9 +309,7 @@ func (l *Limiter) Clip(geom *geos.Geom) ([]*geos.Geom, error) {
 			continue
 		}
 		newParts := filterGeometryByType(g, newPart, geomType)
-		for _, p := range newParts {
-			intersections = append(intersections, p)
-		}
+		intersections = append(intersections, newParts...)
 	}
 	// and merge parts back to our clipped intersection
 	return mergeGeometries(g, intersections, geomType), nil

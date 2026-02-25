@@ -188,7 +188,6 @@ type bunchRefCache struct {
 	buffer       idRefBunches
 	write        chan idRefBunches
 	addc         chan idRef
-	mu           sync.Mutex
 	waitAdd      sync.WaitGroup
 	waitWrite    sync.WaitGroup
 }

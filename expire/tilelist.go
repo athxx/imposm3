@@ -214,10 +214,6 @@ type bbox struct {
 	minx, miny, maxx, maxy float64
 }
 
-func (b bbox) isEmpty() bool {
-	return b == bbox{math.MaxFloat64, math.MaxFloat64, -math.MaxFloat64, -math.MaxFloat64}
-}
-
 func nodesBbox(nodes []osm.Node) bbox {
 	b := bbox{math.MaxFloat64, math.MaxFloat64, -math.MaxFloat64, -math.MaxFloat64}
 

@@ -88,7 +88,7 @@ func (d *Deleter) deleteRelation(id int64, deleteRefs bool, deleteMembers bool) 
 
 	elem, err := d.osmCache.Relations.GetRelation(id)
 	if err != nil {
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			return nil
 		}
 		return err
@@ -135,7 +135,7 @@ func (d *Deleter) deleteRelation(id int64, deleteRefs bool, deleteMembers bool) 
 
 	if deleted && d.expireor != nil {
 		err := d.osmCache.Ways.FillMembers(elem.Members)
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			d.fillMembersFromDeleted(elem.Members)
 		} else if err != nil {
 			return err
@@ -145,7 +145,7 @@ func (d *Deleter) deleteRelation(id int64, deleteRefs bool, deleteMembers bool) 
 				continue
 			}
 			err := d.osmCache.Coords.FillWay(m.Way)
-			if err == cache.NotFound {
+			if err == cache.ErrNotFound {
 				d.fillWayFromDeleted(m.Way)
 			} else if err != nil {
 				continue
@@ -161,7 +161,7 @@ func (d *Deleter) deleteWay(id int64, deleteRefs bool) error {
 
 	elem, err := d.osmCache.Ways.GetWay(id)
 	if err != nil {
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			return nil
 		}
 		return err
@@ -195,7 +195,7 @@ func (d *Deleter) deleteWay(id int64, deleteRefs bool) error {
 	}
 	if deleted && d.expireor != nil {
 		err := d.osmCache.Coords.FillWay(elem)
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			d.fillWayFromDeleted(elem)
 		} else if err != nil {
 			return err
@@ -209,7 +209,7 @@ func (d *Deleter) deleteWay(id int64, deleteRefs bool) error {
 func (d *Deleter) deleteNode(id int64) error {
 	elem, err := d.osmCache.Nodes.GetNode(id)
 	if err != nil {
-		if err == cache.NotFound {
+		if err == cache.ErrNotFound {
 			if elem, err := d.osmCache.Coords.GetCoord(id); err == nil {
 				// Cache from Coords for fillWayFromDeleted.
 				d.deletedNodes[id] = *elem

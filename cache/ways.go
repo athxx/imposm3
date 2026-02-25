@@ -57,7 +57,7 @@ func (c *WaysCache) GetWay(id int64) (*osm.Way, error) {
 		return nil, err
 	}
 	if data == nil {
-		return nil, NotFound
+		return nil, ErrNotFound
 	}
 	way, err := binary.UnmarshalWay(data)
 	if err != nil {
@@ -97,7 +97,7 @@ func (c *WaysCache) Iter() chan *osm.Way {
 }
 
 func (c *WaysCache) FillMembers(members []osm.Member) error {
-	if members == nil || len(members) == 0 {
+	if len(members) == 0 {
 		return nil
 	}
 	for i, member := range members {

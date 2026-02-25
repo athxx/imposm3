@@ -102,7 +102,7 @@ func checkReadWriteDeltaCoords(t *testing.T, withLinearImport bool) {
 
 	for i := range nodes {
 		data, err := cache.GetCoord(int64(i))
-		if err == NotFound {
+		if err == ErrNotFound {
 			t.Fatal("missing coord:", i)
 		} else if err != nil {
 			t.Fatal(err)
@@ -117,7 +117,7 @@ func checkReadWriteDeltaCoords(t *testing.T, withLinearImport bool) {
 
 	// test delete
 	_, err = cache.GetCoord(999999)
-	if err != NotFound {
+	if err != ErrNotFound {
 		t.Error("found missing node")
 	}
 	insertAndCheck(t, cache, 999999, 10, 10)
@@ -150,7 +150,7 @@ func deleteAndCheck(t *testing.T, cache *DeltaCoordsCache, id int64) {
 	}
 
 	result, err := cache.GetCoord(id)
-	if err != NotFound {
+	if err != ErrNotFound {
 		t.Error("found deleted coord", result)
 	}
 }
@@ -240,7 +240,7 @@ func BenchmarkReadDeltaCoords(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		for n := range 10000 {
-			if _, err := cache.GetCoord(int64(n)); err != nil && err != NotFound {
+			if _, err := cache.GetCoord(int64(n)); err != nil && err != ErrNotFound {
 				b.Fatal(err)
 			}
 		}

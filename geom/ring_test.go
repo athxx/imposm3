@@ -12,9 +12,9 @@ func TestRingMerge(t *testing.T) {
 	w1.ID = 1
 	w1.Refs = []int64{1, 2, 3}
 	w1.Nodes = []osm.Node{
-		osm.Node{},
-		osm.Node{},
-		osm.Node{},
+		{},
+		{},
+		{},
 	}
 	r1 := newRing(&w1)
 
@@ -22,9 +22,9 @@ func TestRingMerge(t *testing.T) {
 	w2.ID = 2
 	w2.Refs = []int64{3, 4, 1}
 	w2.Nodes = []osm.Node{
-		osm.Node{},
-		osm.Node{},
-		osm.Node{},
+		{},
+		{},
+		{},
 	}
 	r2 := newRing(&w2)
 	rings := []*ring{r1, r2}
@@ -48,9 +48,9 @@ func TestRingMergeMissingRefs(t *testing.T) {
 	w1.ID = 1
 	w1.Refs = []int64{1, 2, 3}
 	w1.Nodes = []osm.Node{
-		osm.Node{},
-		osm.Node{},
-		osm.Node{},
+		{},
+		{},
+		{},
 	}
 	r1 := newRing(&w1)
 
@@ -75,10 +75,10 @@ func TestRingMergeReverseEndpoints(t *testing.T) {
 	w1.ID = 1
 	w1.Refs = []int64{1, 2, 3, 4}
 	w1.Nodes = []osm.Node{
-		osm.Node{},
-		osm.Node{},
-		osm.Node{},
-		osm.Node{},
+		{},
+		{},
+		{},
+		{},
 	}
 	r1 := newRing(&w1)
 
@@ -86,9 +86,9 @@ func TestRingMergeReverseEndpoints(t *testing.T) {
 	w2.ID = 2
 	w2.Refs = []int64{6, 5, 4}
 	w2.Nodes = []osm.Node{
-		osm.Node{},
-		osm.Node{},
-		osm.Node{},
+		{},
+		{},
+		{},
 	}
 	r2 := newRing(&w2)
 
@@ -96,9 +96,9 @@ func TestRingMergeReverseEndpoints(t *testing.T) {
 	w3.ID = 3
 	w3.Refs = []int64{1, 7, 6}
 	w3.Nodes = []osm.Node{
-		osm.Node{},
-		osm.Node{},
-		osm.Node{},
+		{},
+		{},
+		{},
 	}
 	r3 := newRing(&w3)
 
@@ -154,25 +154,25 @@ func TestRingMergePermutations(t *testing.T) {
 			w1 := osm.Way{}
 			w1.ID = 1
 			w1.Refs = ways[indices[0]]
-			w1.Nodes = []osm.Node{osm.Node{}, osm.Node{}, osm.Node{}, osm.Node{}}
+			w1.Nodes = []osm.Node{{}, {}, {}, {}}
 			w2 := osm.Way{}
 			w2.ID = 2
 			w2.Refs = ways[indices[1]]
-			w2.Nodes = []osm.Node{osm.Node{}, osm.Node{}, osm.Node{}, osm.Node{}}
+			w2.Nodes = []osm.Node{{}, {}, {}, {}}
 			w3 := osm.Way{}
 			w3.ID = 3
 			w3.Refs = ways[indices[2]]
-			w3.Nodes = []osm.Node{osm.Node{}, osm.Node{}, osm.Node{}, osm.Node{}}
+			w3.Nodes = []osm.Node{{}, {}, {}, {}}
 			w4 := osm.Way{}
 			w4.ID = 4
 			w4.Refs = ways[indices[3]]
-			w4.Nodes = []osm.Node{osm.Node{}, osm.Node{}, osm.Node{}, osm.Node{}}
+			w4.Nodes = []osm.Node{{}, {}, {}, {}}
 
 			rings := []*ring{
-				&ring{ways: []*osm.Way{&w1}, refs: w1.Refs, nodes: w1.Nodes},
-				&ring{ways: []*osm.Way{&w2}, refs: w2.Refs, nodes: w2.Nodes},
-				&ring{ways: []*osm.Way{&w3}, refs: w3.Refs, nodes: w3.Nodes},
-				&ring{ways: []*osm.Way{&w4}, refs: w4.Refs, nodes: w4.Nodes},
+				{ways: []*osm.Way{&w1}, refs: w1.Refs, nodes: w1.Nodes},
+				{ways: []*osm.Way{&w2}, refs: w2.Refs, nodes: w2.Nodes},
+				{ways: []*osm.Way{&w3}, refs: w3.Refs, nodes: w3.Nodes},
+				{ways: []*osm.Way{&w4}, refs: w4.Refs, nodes: w4.Nodes},
 			}
 			result := mergeRings(rings)
 			if len(result) != 1 {
